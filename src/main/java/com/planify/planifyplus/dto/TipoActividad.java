@@ -1,4 +1,4 @@
-package com.planify.planifyplus.model;
+package com.planify.planifyplus.dto;
 
 public enum TipoActividad {
     CULTURAL,
