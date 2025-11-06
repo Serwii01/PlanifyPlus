@@ -4,4 +4,6 @@ public enum TipoActividad {
     CULTURAL,
     DEPORTIVA,
     TALLER
+
+    //hola 123
 }
