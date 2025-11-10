@@ -10,7 +10,6 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CONTROLLER_NAME">
    <children>
       <Pane prefHeight="200.0" prefWidth="1024.0" style="-fx-background-color: #33fff0;">
@@ -26,7 +25,7 @@
          <children>
             <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="437.0" layoutY="25.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../java/imagenes/comic-style-user-icon-with-transparent-background-file-png.png" />
+                  <Image url="@../imagenes/comic-style-user-icon-with-transparent-background-file-png.png" />
                </image>
             </ImageView>
          </children>
