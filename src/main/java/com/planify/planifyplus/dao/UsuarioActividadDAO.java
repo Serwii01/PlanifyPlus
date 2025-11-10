@@ -1,4 +1,4 @@
 package com.planify.planifyplus.dao;
 
-public class DAOactividad {
+public class UsuarioActividadDAO {
 }
