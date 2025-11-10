@@ -1,13 +1,27 @@
 package com.planify.planifyplus.controller;
 
-import javafx.application.Application;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
+import javafx.fxml.Initializable;
 
-public class LoginController {
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class LoginController implements Initializable {
+
+    @FXML
+    private TextField usuarioLogin;
+    @FXML
+    private TextField contraseñaLogin;
+    @FXML
+    private Button continuarBoton;
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+
+    }
+
 
 
 }
