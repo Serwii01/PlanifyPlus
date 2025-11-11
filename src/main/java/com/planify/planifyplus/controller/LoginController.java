@@ -2,26 +2,32 @@ package com.planify.planifyplus.controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.event.ActionEvent;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
     @FXML
-    private TextField usuarioLogin;
+    private TextField userLogin;          // <-- coincide con fx:id del FXML
+
     @FXML
-    private TextField contraseñaLogin;
+    private PasswordField contrasenaLogin; // <-- coincide con fx:id del FXML
+
     @FXML
-    private Button continuarBoton;
+    private Button iniciarSesionBoton;     // <-- coincide con fx:id del FXML
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        // Inicialización opcional
     }
 
-
-
+    @FXML
+    private void onIniciarSesion(ActionEvent e) {
+        System.out.println("Login con usuario = " + userLogin.getText());
+    }
 }
