@@ -1,14 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="CONTROLLER_NAME"
-            prefHeight="400.0" prefWidth="600.0">
+<AnchorPane prefHeight="768.0" prefWidth="1024.0"
+            style="-fx-background-color: FFFFFF;"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.planify.planifyplus.controller.RegistroController">
 
+    <children>
+        <!-- CABECERA: casita + logo + título -->
+        <Pane layoutX="-10.0" prefHeight="200.0" prefWidth="1024.0" style="-fx-background-color: FFFFFF;">
+            <children>
+                <!-- Casa (volver a inicio) -->
+                <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" text="🏠"
+                        onAction="#onIrInicio"
+                        style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"/>
+
+                <!-- Logo centrado (ajusta la ruta si usáis otra imagen) -->
+                <ImageView fitHeight="120.0" fitWidth="165.0" layoutX="431.0" layoutY="40.0" pickOnBounds="true" preserveRatio="true">
+                    <image>
+                        <Image url="@../imagenes/descarga.png" />
+                    </image>
+                </ImageView>
+
+                <!-- Título principal -->
+                <Label layoutX="408.0" layoutY="149.0" text="Crear Cuenta">
+                    <font>
+                        <Font name="Candara Bold" size="42.0" />
+                    </font>
+                </Label>
+            </children>
+        </Pane>
+
+        <!-- CONTENIDO: apilado sin coordenadas fijas -->
+        <VBox spacing="14"
+              AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+              AnchorPane.topAnchor="200" AnchorPane.bottomAnchor="0"
+              alignment="TOP_CENTER">
+
+            <!-- Subtítulo -->
+            <Text text="Únete a la comunidad de PlanifyPlus">
+                <font><Font size="18.0"/></font>
+            </Text>
+
+            <!-- FORMULARIO -->
+            <VBox spacing="10" maxWidth="360">
+                <children>
+                    <Label text="Nombre">
+                        <font><Font size="20.0"/></font>
+                    </Label>
+                    <TextField fx:id="txtNombre" promptText="Tu nombre completo"
+                               style="-fx-background-radius: 10; -fx-padding: 8 12 8 12;"/>
+
+                    <Label text="Correo electrónico">
+                        <font><Font size="20.0"/></font>
+                    </Label>
+                    <TextField fx:id="txtEmail" promptText="tu@email.com"
+                               style="-fx-background-radius: 10; -fx-padding: 8 12 8 12;"/>
+
+                    <Label text="Contraseña">
+                        <font><Font size="20.0"/></font>
+                    </Label>
+                    <PasswordField fx:id="txtContrasena" promptText="Mínimo 6 caracteres"
+                                   style="-fx-background-radius: 10; -fx-padding: 8 12 8 12;"/>
+
+                    <Label text="Ciudad (opcional)">
+                        <font><Font size="20.0"/></font>
+                    </Label>
+                    <ComboBox fx:id="cmbCiudad" promptText="Selecciona tu ciudad"
+                              style="-fx-background-radius: 10;"/>
+
+                    <Text text="Ayúdanos a mostrarte actividades cercanas"/>
+                </children>
+            </VBox>
+
+            <!-- BOTÓN REGISTRARSE -->
+            <Button fx:id="btnRegistrarse" text="Registrarse" onAction="#onRegistrarse"
+                    prefWidth="360" prefHeight="48"
+                    style="-fx-cursor: hand; -fx-background-color: #4C8DF6; -fx-background-radius: 22; -fx-text-fill: white; -fx-font-weight: bold;">
+                <font><Font size="19.0"/></font>
+            </Button>
+
+            <!-- LÍNEA: ¿Ya tienes cuenta? Inicia sesión -->
+            <HBox spacing="8" alignment="CENTER">
+                <children>
+                    <Text text="¿Ya tienes cuenta?">
+                        <font><Font size="18.0"/></font>
+                    </Text>
+                    <Hyperlink text="Inicia sesión" textFill="#0077ff" onAction="#onIrLogin">
+                        <font><Font size="18.0"/></font>
+                    </Hyperlink>
+                </children>
+            </HBox>
+
+            <!-- Relleno flexible inferior -->
+            <Region VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </children>
 </AnchorPane>
