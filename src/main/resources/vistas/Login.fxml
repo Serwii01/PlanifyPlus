@@ -26,14 +26,19 @@
                   <Font name="Candara Bold" size="42.0" />
                </font>
             </Label>
-            <ImageView fitHeight="92.0" fitWidth="92.0" layoutX="21.0" layoutY="21.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="homeBoton" accessibleRole="HYPERLINK" fitHeight="74.0" fitWidth="64.0" layoutX="21.0" layoutY="21.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../imagenes/comic-style-user-icon-with-transparent-background-file-png.png" />
+                  <Image url="@../imagenes/icons8-casa-48.png" />
                </image>
             </ImageView>
+            <Button layoutX="23.0" layoutY="20.0" mnemonicParsing="false" style="-fx-background-color: transparent;" text="🏠">
+               <font>
+                  <Font size="23.0" />
+               </font>
+            </Button>
          </children>
       </Pane>
-      <Pane layoutX="-10.0" layoutY="200.0" prefHeight="200.0" prefWidth="1024.0" style="-fx-background-color: FFFFFF;">
+      <Pane accessibleRole="HYPERLINK" layoutX="-10.0" layoutY="200.0" prefHeight="200.0" prefWidth="1024.0" style="-fx-background-color: FFFFFF;">
          <children>
             <Text layoutX="358.0" layoutY="21.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Accede a tu cuenta de PlanifyPlus" wrappingWidth="283.0">
                <font>
@@ -45,7 +50,7 @@
                   <Font size="24.0" />
                </font>
             </Label>
-            <TextField fx:id="userLogin" layoutX="376.0" layoutY="114.0" prefHeight="36.0" prefWidth="248.0" />
+            <TextField fx:id="userLogin" layoutX="376.0" layoutY="114.0" prefHeight="36.0" prefWidth="248.0" promptText="tucorreo@ejemplo.com" />
             <Label layoutX="439.0" layoutY="151.0" text="Contraseña">
                <font>
                   <Font size="24.0" />
@@ -53,18 +58,18 @@
             </Label>
          </children>
       </Pane>
-      <PasswordField fx:id="contrasenaLogin" layoutX="364.0" layoutY="400.0" prefHeight="36.0" prefWidth="248.0" />
-       <Button fx:id="iniciarSesionBoton" layoutX="378.0" layoutY="481.0" mnemonicParsing="false" onAction="#onIniciarSesion" prefHeight="15.0" prefWidth="248.0" style="-fx-cursor: hand; -fx-background-color: #0077ff; -fx-background-radius: 20;" text="Iniciar sesion">
+      <PasswordField fx:id="contrasenaLogin" layoutX="364.0" layoutY="400.0" prefHeight="36.0" prefWidth="248.0" promptText="Tu contraseña" />
+       <Button fx:id="iniciarSesionBoton" layoutX="364.0" layoutY="484.0" mnemonicParsing="false" onAction="#onIniciarSesion" prefHeight="15.0" prefWidth="248.0" style="-fx-cursor: hand; -fx-background-color: #0077ff; -fx-background-radius: 20;" text="Iniciar sesion">
          <font>
             <Font size="19.0" />
          </font>
       </Button>
-      <Label layoutX="291.0" layoutY="602.0" text="No tienes cuenta?">
+      <Label layoutX="291.0" layoutY="602.0" text="¿No tienes cuenta?">
          <font>
             <Font size="32.0" />
          </font>
       </Label>
-      <Hyperlink layoutX="557.0" layoutY="600.0" prefHeight="49.0" prefWidth="169.0" text="Registrate" textFill="#0077ff">
+      <Hyperlink fx:id="botonNoTenerCuenta" layoutX="571.0" layoutY="600.0" prefHeight="49.0" prefWidth="169.0" text="Registrate" textFill="#0077ff">
          <font>
             <Font size="28.0" />
          </font>
