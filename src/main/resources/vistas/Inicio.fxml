@@ -1,47 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.planify.planifyplus.controller.InicioController"
-            prefHeight="400.0" prefWidth="600.0">
-    <BorderPane fx:id="mainPane" xmlns:fx="http://javafx.com/fxml" fx:controller="com.planifyplus.controller.InicioController">
-        <top>
-            <HBox spacing="20" alignment="CENTER_LEFT">
-                <ImageView fx:id="logo" fitHeight="32" fitWidth="120"/>
-                <TextField fx:id="tfBusqueda" promptText="Buscar actividades..." styleClass="busqueda"/>
-                <Pane HBox.hgrow="ALWAYS"/> <!-- Espacio flexible -->
-                <!-- Botonera según sesión -->
-                <HBox fx:id="botonesSesion" spacing="10">
-                    <!-- Estos botones serán gestionados en el controlador -->
-                    <Button fx:id="btnIniciarSesion" text="Iniciar sesión"/>
-                    <Button fx:id="btnRegistrarse" text="Registrarse"/>
-                    <Button fx:id="btnMiPerfil" text="Mi Perfil" visible="false"/>
-                    <Button fx:id="btnCerrarSesion" text="Cerrar sesión" visible="false"/>
-                    <Button fx:id="btnCrear" text="Crear Actividad" visible="false"/>
-                    <Label fx:id="lblAdmin" text="Admin" styleClass="adminBadge" visible="false"/>
-                </HBox>
-            </HBox>
-        </top>
-        <center>
-            <HBox spacing="40" styleClass="contenidoInicio">
-                <!-- Actividades de la Comunidad -->
-                <VBox fx:id="boxComunidad" spacing="20" prefWidth="600">
-                    <Label text="Actividades de la Comunidad" styleClass="titulo"/>
-                    <VBox fx:id="actividadesComunidad"/>
-                </VBox>
-                <!-- Mis Actividades -->
-                <VBox fx:id="boxMisActividades" spacing="20">
-                    <Label text="Mis Actividades Creadas" styleClass="titulo"/>
-                    <VBox fx:id="misActividades"/>
-                </VBox>
-            </HBox>
-        </center>
-    </BorderPane>
-
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Label?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.planify.planifyplus.controller.InicioController">
+    <!-- Aquí puedes poner tus elementos de la interfaz -->
+    <children>
+        <Label text="¡Bienvenido a PlanifyPlus!" layoutX="50" layoutY="50" />
+    </children>
 </AnchorPane>

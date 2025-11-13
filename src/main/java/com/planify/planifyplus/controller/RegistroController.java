@@ -1,5 +1,7 @@
 package com.planify.planifyplus.controller;
 
+import com.planify.planifyplus.dao.UsuarioDAO;
+import com.planify.planifyplus.dto.UsuarioDTO;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -19,22 +22,28 @@ public class RegistroController {
     @FXML private ComboBox<String> cmbCiudad;
     @FXML private Button btnRegistrarse;
 
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+
     // Regex sencilla para email
     private static final Pattern EMAIL_REGEX =
             Pattern.compile("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
 
     @FXML
     public void initialize() {
-        // Rellena combo de ciudades (ajústalo a lo que uséis)
+        // Lista de ciudades de ejemplo (ajustad a las vuestras si queréis)
         cmbCiudad.setItems(FXCollections.observableArrayList(
                 List.of("Sevilla", "Madrid", "Barcelona", "Valencia", "Málaga", "Bilbao")
         ));
     }
 
-    /* ======================
-       Handlers de la vista
-       ====================== */
+    // Navegación
+    @FXML
+    private void onIrInicio() { go("/vistas/Inicio.fxml"); }
 
+    @FXML
+    private void onIrLogin() { go("/vistas/Login.fxml"); }
+
+    // Registro
     @FXML
     private void onRegistrarse() {
         String nombre  = txtNombre.getText().trim();
@@ -42,34 +51,37 @@ public class RegistroController {
         String pass    = txtContrasena.getText();
         String ciudad  = cmbCiudad.getValue(); // opcional
 
-        // Validación de formulario (sin persistir todavía)
+        // Validaciones mínimas de formulario
         if (nombre.isEmpty()) { error("El nombre es obligatorio."); return; }
         if (!EMAIL_REGEX.matcher(email).matches()) { error("Correo electrónico no válido."); return; }
         if (pass.length() < 6) { error("La contraseña debe tener al menos 6 caracteres."); return; }
 
-        // TODO (cuando toque): llamar a UsuarioService/UsuarioDAO para persistir
-        // usuarioService.registrar(nombre, email, pass, ciudad);
+        // Reglas de negocio para registro
+        try {
+            if (usuarioDAO.existeEmail(email)) {
+                error("Ese correo ya está registrado.");
+                return;
+            }
 
-        info("Validación correcta. (Pendiente de guardar en BD)");
-        // Si queréis navegar tras el registro, descomenta una:
-        // go("/vistas/Inicio.fxml");
-        // go("/vistas/Login.fxml");
+            UsuarioDTO nuevo = new UsuarioDTO();
+            nuevo.setNombre(nombre);
+            nuevo.setEmail(email);
+            nuevo.setContrasena(pass);              // (si activáis BCrypt, aquí poned el hash)
+            nuevo.setCiudad(ciudad);
+            nuevo.setEsAdmin(false);
+            nuevo.setCreadoEn(LocalDateTime.now());
+
+            usuarioDAO.crear(nuevo);
+
+            info("Cuenta creada correctamente.");
+            go("/vistas/Login.fxml");               // o /vistas/Inicio.fxml si preferís
+
+        } catch (Exception e) {
+            error("No se pudo registrar el usuario.\nDetalle: " + e.getMessage());
+        }
     }
 
-    @FXML
-    private void onIrInicio() {
-        go("/vistas/Inicio.fxml");
-    }
-
-    @FXML
-    private void onIrLogin() {
-        go("/vistas/Login.fxml");
-    }
-
-    /* ======================
-       Utilidades
-       ====================== */
-
+    // Helpers UI
     private void go(String fxmlPath) {
         try {
             Stage stage = (Stage) btnRegistrarse.getScene().getWindow();
