@@ -10,7 +10,7 @@ public class PlanifyApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/Registro.fxml"));
         Parent root = loader.load();
         primaryStage.setTitle("PlanifyPlus - Inicio");
         primaryStage.setScene(new Scene(root));
