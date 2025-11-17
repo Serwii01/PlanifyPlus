@@ -29,7 +29,7 @@
                     </image>
                 </ImageView>
 
-                <Label text="Iniciar sesi贸n">
+                <Label text="Iniciar sesión">
                     <font>
                         <Font name="Candara Bold" size="42.0" />
                     </font>
@@ -76,7 +76,7 @@
                 <VBox spacing="10" maxWidth="320">
                     <children>
 
-                        <Label text="Correo electr贸nico">
+                        <Label text="Correo electrónico">
                             <font>
                                 <Font size="20.0" />
                             </font>
@@ -87,14 +87,14 @@
                                    prefHeight="36.0"
                                    style="-fx-background-radius: 10; -fx-padding: 8 12 8 12;"/>
 
-                        <Label text="Contrase帽a">
+                        <Label text="Contraseña">
                             <font>
                                 <Font size="20.0" />
                             </font>
                         </Label>
 
                         <PasswordField fx:id="contrasenaLogin"
-                                       promptText="Tu contrase帽a"
+                                       promptText="Tu contraseña"
                                        prefHeight="36.0"
                                        style="-fx-background-radius: 10; -fx-padding: 8 12 8 12;"/>
 
@@ -103,7 +103,7 @@
 
                 <!-- Bot贸n iniciar sesi贸n -->
                 <Button fx:id="iniciarSesionBoton"
-                        text="Iniciar sesi贸n"
+                        text="Iniciar sesión"
                         onAction="#onIniciarSesion"
                         prefWidth="320.0"
                         prefHeight="48.0"
@@ -116,13 +116,13 @@
                 <!-- 驴No tienes cuenta? + Reg铆strate -->
                 <HBox spacing="8" alignment="CENTER">
                     <children>
-                        <Label text="驴No tienes cuenta?">
+                        <Label text="!No tienes cuenta?">
                             <font>
                                 <Font size="20.0" />
                             </font>
                         </Label>
                         <Hyperlink fx:id="botonNoTenerCuenta"
-                                   text="Reg铆strate"
+                                   text="Regístrate"
                                    textFill="#0077ff"
                                    onAction="#onIrRegistro">
                             <font>
