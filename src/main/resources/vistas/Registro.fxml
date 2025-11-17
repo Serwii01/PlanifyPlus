@@ -10,7 +10,6 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -23,42 +22,39 @@
             fx:controller="com.planify.planifyplus.controller.RegistroController">
 
     <children>
-        <!-- CABECERA: casita + logo + título -->
-        <Pane layoutX="-10.0" prefHeight="200.0" prefWidth="1024.0" style="-fx-background-color: FFFFFF;">
-            <children>
-                <!-- Casa (volver a inicio) -->
-                <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" text="🏠"
-                        onAction="#onIrInicio"
-                        style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"/>
+        <!-- Casita fija arriba a la izquierda -->
+        <Button mnemonicParsing="false" text="🏠"
+                onAction="#onIrInicio"
+                style="-fx-background-color: transparent; -fx-font-size: 22px; -fx-cursor: hand;"
+                AnchorPane.topAnchor="15.0" AnchorPane.leftAnchor="25.0"/>
 
-                <!-- Logo centrado (ajusta la ruta si usáis otra imagen) -->
-                <ImageView fitHeight="120.0" fitWidth="165.0" layoutX="431.0" layoutY="40.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
-                        <Image url="@../imagenes/descarga.png" />
-                    </image>
-                </ImageView>
+        <!-- Bloque central subido -->
+        <VBox alignment="TOP_CENTER" spacing="16"
+              AnchorPane.topAnchor="40.0"
+              AnchorPane.leftAnchor="0.0"
+              AnchorPane.rightAnchor="0.0">
 
-                <!-- Título principal -->
-                <Label layoutX="408.0" layoutY="149.0" text="Crear Cuenta">
-                    <font>
-                        <Font name="Candara Bold" size="42.0" />
-                    </font>
-                </Label>
-            </children>
-        </Pane>
+            <!-- Logo más pequeño -->
+            <ImageView fitHeight="80.0" fitWidth="110.0"
+                       pickOnBounds="true" preserveRatio="true">
+                <image>
+                    <Image url="@../imagenes/descarga.png" />
+                </image>
+            </ImageView>
 
-        <!-- CONTENIDO: apilado sin coordenadas fijas -->
-        <VBox spacing="14"
-              AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
-              AnchorPane.topAnchor="200" AnchorPane.bottomAnchor="0"
-              alignment="TOP_CENTER">
+            <!-- Título principal -->
+            <Label text="Crear Cuenta">
+                <font>
+                    <Font name="Candara Bold" size="42.0" />
+                </font>
+            </Label>
 
             <!-- Subtítulo -->
             <Text text="Únete a la comunidad de PlanifyPlus">
                 <font><Font size="18.0"/></font>
             </Text>
 
-            <!-- FORMULARIO -->
+            <!-- Formulario -->
             <VBox spacing="10" maxWidth="360">
                 <children>
                     <Label text="Nombre">
@@ -89,14 +85,14 @@
                 </children>
             </VBox>
 
-            <!-- BOTÓN REGISTRARSE -->
+            <!-- Botón registrarse -->
             <Button fx:id="btnRegistrarse" text="Registrarse" onAction="#onRegistrarse"
                     prefWidth="360" prefHeight="48"
                     style="-fx-cursor: hand; -fx-background-color: #4C8DF6; -fx-background-radius: 22; -fx-text-fill: white; -fx-font-weight: bold;">
                 <font><Font size="19.0"/></font>
             </Button>
 
-            <!-- LÍNEA: ¿Ya tienes cuenta? Inicia sesión -->
+            <!-- ¿Ya tienes cuenta? -->
             <HBox spacing="8" alignment="CENTER">
                 <children>
                     <Text text="¿Ya tienes cuenta?">
@@ -108,8 +104,7 @@
                 </children>
             </HBox>
 
-            <!-- Relleno flexible inferior -->
-            <Region VBox.vgrow="ALWAYS"/>
+            <Region prefHeight="10.0"/>
         </VBox>
     </children>
 </AnchorPane>

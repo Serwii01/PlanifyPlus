@@ -3,11 +3,12 @@ package com.planify.planifyplus.dao;
 import com.planify.planifyplus.conexion.ConexionDB;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
 public class UsuarioDAO {
 
-    /** Comprueba si existe ya un usuario con ese email (case-insensitive). */
+
     public boolean existeEmail(String email) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -37,8 +38,49 @@ public class UsuarioDAO {
         }
     }
 
-    /*
-    Juanka te dejo esto comentado para que tu pongas aquí tus métodos del login
-    */
-}
 
+    public UsuarioDTO buscarPorEmail(String email) {
+        EntityManager em = ConexionDB.getEntityManager();
+        try {
+            TypedQuery<UsuarioDTO> q = em.createQuery(
+                    "SELECT u FROM UsuarioDTO u WHERE LOWER(u.email) = LOWER(:e)",
+                    UsuarioDTO.class
+            );
+            q.setParameter("e", email);
+
+            try {
+                return q.getSingleResult();
+            } catch (NoResultException ex) {
+                return null; // no existe
+            }
+
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Valida las credenciales: devuelve el usuario si email+contraseña son correctos.
+     */
+    public UsuarioDTO validarLogin(String email, String contrasena) {
+        EntityManager em = ConexionDB.getEntityManager();
+        try {
+            TypedQuery<UsuarioDTO> q = em.createQuery(
+                    "SELECT u FROM UsuarioDTO u " +
+                            "WHERE LOWER(u.email) = LOWER(:e) AND u.contrasena = :c",
+                    UsuarioDTO.class
+            );
+            q.setParameter("e", email);
+            q.setParameter("c", contrasena);
+
+            try {
+                return q.getSingleResult();  // credenciales válidas
+            } catch (NoResultException ex) {
+                return null; // incorrecto
+            }
+
+        } finally {
+            em.close();
+        }
+    }
+}
