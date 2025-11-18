@@ -49,7 +49,7 @@
         <Button layoutX="20.0" layoutY="20.0"
                 mnemonicParsing="false"
                 style="-fx-background-color: transparent;"
-                text="馃彔"
+                text="🏠"
                 onAction="#onIrInicio">
             <font>
                 <Font size="23.0" />
