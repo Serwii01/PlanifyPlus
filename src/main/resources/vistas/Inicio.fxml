@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
@@ -7,7 +6,6 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.planify.planifyplus.controller.InicioController">
 
-    <!-- Header top -->
     <top>
         <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-padding: 16; -fx-background-color: #F2F4F8;">
             <!-- Logo y nombre -->
@@ -20,15 +18,15 @@
             <HBox spacing="10" alignment="CENTER_RIGHT">
                 <Button fx:id="btnRegister" text="Registrarse" onAction="#handleRegister"/>
                 <Button fx:id="btnLogin" text="Iniciar sesión" onAction="#handleLogin"/>
-                <Label fx:id="lblCiudad" text="Madrid" style="-fx-font-size: 15; -fx-text-fill: #4B4B4B;" visible="false"/>
-                <Label fx:id="lblUser" text="Sergio Fernández" style="-fx-font-size: 15; -fx-font-weight: bold;" visible="false"/>
-                <Button fx:id="btnLogout" text="Cerrar sesión" onAction="#handleLogout" visible="false"/>
+                <Label fx:id="lblCiudad" text="" style="-fx-font-size: 15; -fx-text-fill: #4B4B4B;" visible="false"/>
+                <Label fx:id="lblUser" text="" style="-fx-font-size: 15; -fx-font-weight: bold;" visible="false"/>
+                <Button fx:id="btnPerfil" text="Mi Perfil" onAction="#handlePerfil" style="-fx-background-color: #E5E7EB; -fx-text-fill: #222;" visible="false"/>
+                <Button fx:id="btnLogout" text="Cerrar sesión" onAction="#handleLogout" style="-fx-background-color: #E5E7EB; -fx-text-fill: #222;" visible="false"/>
                 <Button fx:id="btnCrearActividad" text="Crear Actividad" onAction="#handleCrearActividad" style="-fx-background-color: #60A5FA; -fx-text-fill: white;" visible="false"/>
             </HBox>
         </HBox>
     </top>
 
-    <!-- Main content split: actividades comunidad (izq) y usuario (der) -->
     <center>
         <GridPane hgap="40" vgap="0" style="-fx-padding: 32;">
             <!-- IZQUIERDA: Actividades comunidad -->
