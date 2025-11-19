@@ -1,54 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.geometry.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.planify.planifyplus.controller.InicioController">
-
-    <!-- Header top -->
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.planify.planifyplus.controller.InicioController"
+            style="-fx-background-color: #F5F8FB;">
     <top>
-        <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-padding: 16; -fx-background-color: #F2F4F8;">
-            <!-- Logo y nombre -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <ImageView fx:id="logoImage" fitHeight="32" fitWidth="32" pickOnBounds="true" preserveRatio="true"/>
-                <Label text="PlanifyPlus" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
+        <HBox spacing="18" alignment="CENTER_LEFT" style="-fx-padding: 22; -fx-background-color: #F2F4F8;">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <ImageView fx:id="logoImage" fitHeight="34" fitWidth="34" preserveRatio="true" pickOnBounds="true"/>
+                <Label text="PlanifyPlus" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
             </HBox>
-            <Region fx:id="headerSpacer" HBox.hgrow="ALWAYS"/>
-            <TextField fx:id="searchBar" promptText="Buscar actividades..." style="-fx-pref-width: 340;"/>
-            <HBox spacing="10" alignment="CENTER_RIGHT">
-                <Button fx:id="btnRegister" text="Registrarse" onAction="#handleRegister"/>
-                <Button fx:id="btnLogin" text="Iniciar sesión" onAction="#handleLogin"/>
-                <Label fx:id="lblCiudad" text="Madrid" style="-fx-font-size: 15; -fx-text-fill: #4B4B4B;" visible="false"/>
-                <Label fx:id="lblUser" text="Sergio Fernández" style="-fx-font-size: 15; -fx-font-weight: bold;" visible="false"/>
-                <Button fx:id="btnLogout" text="Cerrar sesión" onAction="#handleLogout" visible="false"/>
-                <Button fx:id="btnCrearActividad" text="Crear Actividad" onAction="#handleCrearActividad" style="-fx-background-color: #60A5FA; -fx-text-fill: white;" visible="false"/>
-            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="searchBar"
+                       promptText="Buscar actividades..."
+                       style="-fx-pref-width: 320; -fx-font-size: 16;"/>
+            <ComboBox fx:id="cmbDistancia"
+                      promptText="Todas las distancias"
+                      style="-fx-pref-width: 155;"/>
+            <Label fx:id="lblCiudad" text="Sevilla"
+                   style="-fx-background-color: #e7eaf3; -fx-padding: 4 18 4 18; -fx-background-radius: 16; -fx-font-size: 15; -fx-font-weight: bold;"
+                   visible="false"/>
+            <Label fx:id="lblUser" text="S"
+                   style="-fx-background-color: #1563e2; -fx-text-fill: white; -fx-padding: 6 18 6 18; -fx-background-radius: 16; -fx-font-size: 15; -fx-font-weight: bold;"
+                   visible="false"/>
+            <Button fx:id="btnPerfil" text="Mi Perfil"
+                    onAction="#handlePerfil"
+                    style="-fx-background-color: #E5E7EB; -fx-text-fill: #222; -fx-background-radius: 15; -fx-font-size: 15;" visible="false"/>
+            <Button fx:id="btnLogout" text="Cerrar sesión"
+                    onAction="#handleLogout"
+                    style="-fx-background-color: #E5E7EB; -fx-text-fill: #222; -fx-background-radius: 15; -fx-font-size: 15;" visible="false"/>
+            <Button fx:id="btnCrearActividad" text="Crear Actividad"
+                    onAction="#handleCrearActividad"
+                    style="-fx-background-color: #1563e2; -fx-text-fill: white; -fx-background-radius: 22; -fx-font-size: 16; -fx-padding: 8 26 8 26; -fx-effect: dropshadow(gaussian, #1563e2, 3, 0.4, 0, 2);" visible="false"/>
+            <Button fx:id="btnRegister" text="Registrarse"
+                    onAction="#handleRegister"
+                    style="-fx-background-color: #60A5FA; -fx-text-fill: white; -fx-background-radius: 22; -fx-font-size: 15;" visible="true"/>
+            <Button fx:id="btnLogin" text="Iniciar sesión"
+                    onAction="#handleLogin"
+                    style="-fx-background-color: white; -fx-border-color: #60A5FA; -fx-border-width: 2; -fx-text-fill: #222; -fx-background-radius: 22; -fx-font-size: 15;" visible="true"/>
         </HBox>
     </top>
-
-    <!-- Main content split: actividades comunidad (izq) y usuario (der) -->
     <center>
-        <GridPane hgap="40" vgap="0" style="-fx-padding: 32;">
-            <!-- IZQUIERDA: Actividades comunidad -->
-            <VBox fx:id="actividadesComunidadBox" GridPane.columnIndex="0" spacing="16">
-                <Label text="Actividades de la Comunidad" style="-fx-font-size: 19; -fx-text-fill: #1663e3;"/>
-                <ScrollPane fx:id="scrollActividadesComunidad" fitToWidth="true" style="-fx-background-color: transparent;">
-                    <VBox fx:id="contenedorComunidad" spacing="15"/>
-                </ScrollPane>
-            </VBox>
-            <!-- DERECHA: Actividades usuario/creadas -->
-            <VBox fx:id="actividadesUsuarioBox" GridPane.columnIndex="1" spacing="16">
-                <Label text="Mis Actividades Creadas" style="-fx-font-size: 19; -fx-text-fill: #1663e3;"/>
-                <StackPane fx:id="usuarioPanel">
-                    <Label fx:id="lblNoSesion" text="Inicia sesión para ver tus actividades"
-                           style="-fx-font-size: 16; -fx-text-fill: #999;" alignment="CENTER"/>
-                    <ScrollPane fx:id="scrollActividadesUsuario" fitToWidth="true" style="-fx-background-color: transparent;" visible="false">
-                        <VBox fx:id="contenedorUsuario" spacing="15"/>
+        <StackPane>
+            <GridPane hgap="48" style="-fx-padding: 36;" maxWidth="1400" alignment="TOP_CENTER">
+                <!-- Panel Izquierdo -->
+                <VBox fx:id="actividadesComunidadBox" GridPane.columnIndex="0"
+                      spacing="20" alignment="TOP_CENTER" style="-fx-pref-width: 650;">
+                    <Label text="Actividades de la Comunidad"
+                           style="-fx-font-size: 20; -fx-text-fill: #1563e2; -fx-font-weight: bold;"/>
+                    <ScrollPane fx:id="scrollActividadesComunidad"
+                                fitToWidth="true" fitToHeight="true"
+                                style="-fx-background-color: transparent;"
+                                VBox.vgrow="ALWAYS">
+                        <VBox fx:id="contenedorComunidad" spacing="17" alignment="TOP_CENTER"/>
                     </ScrollPane>
-                </StackPane>
-            </VBox>
-        </GridPane>
+                </VBox>
+                <!-- Panel Derecho -->
+                <VBox fx:id="actividadesUsuarioBox" GridPane.columnIndex="1"
+                      spacing="20" alignment="TOP_CENTER" style="-fx-pref-width: 650;">
+                    <Label text="Mis Actividades Creadas"
+                           style="-fx-font-size: 20; -fx-text-fill: #1563e2; -fx-font-weight: bold;"/>
+                    <StackPane>
+                        <Label fx:id="lblNoSesion" text="Inicia sesión para ver tus actividades"
+                               style="-fx-font-size: 16; -fx-text-fill: #999;" alignment="CENTER"/>
+                        <ScrollPane fx:id="scrollActividadesUsuario"
+                                    fitToWidth="true" fitToHeight="true"
+                                    style="-fx-background-color: transparent;"
+                                    VBox.vgrow="ALWAYS" visible="false">
+                            <VBox fx:id="contenedorUsuario" spacing="17" alignment="TOP_CENTER"/>
+                        </ScrollPane>
+                    </StackPane>
+                </VBox>
+            </GridPane>
+        </StackPane>
     </center>
 </BorderPane>

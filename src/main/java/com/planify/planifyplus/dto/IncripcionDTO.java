@@ -1,4 +1,5 @@
 package com.planify.planifyplus.dto;
+import jakarta.persistence.*;
 import lombok.Data;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
