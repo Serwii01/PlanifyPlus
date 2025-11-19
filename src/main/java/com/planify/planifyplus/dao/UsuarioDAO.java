@@ -8,6 +8,7 @@ import jakarta.persistence.TypedQuery;
 
 public class UsuarioDAO {
 
+    // ================== MÉTODOS QUE YA TENÍAMOS ==================
 
     public boolean existeEmail(String email) {
         EntityManager em = ConexionDB.getEntityManager();
@@ -37,7 +38,6 @@ public class UsuarioDAO {
             em.close();
         }
     }
-
 
     public UsuarioDTO buscarPorEmail(String email) {
         EntityManager em = ConexionDB.getEntityManager();
@@ -79,6 +79,39 @@ public class UsuarioDAO {
                 return null; // incorrecto
             }
 
+        } finally {
+            em.close();
+        }
+    }
+
+    // ================== MÉTODOS NUEVOS PARA PERFIL ==================
+
+    /**
+     * Obtiene un usuario por su ID.
+     * Útil para cargar los datos en Perfil y Configuración de perfil.
+     */
+    public UsuarioDTO obtenerPorId(long id) {
+        EntityManager em = ConexionDB.getEntityManager();
+        try {
+            return em.find(UsuarioDTO.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Actualiza los datos de un usuario existente.
+     * Se usa desde ConfPerfilController al guardar cambios.
+     */
+    public void actualizar(UsuarioDTO usuario) {
+        EntityManager em = ConexionDB.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(usuario);   // actualiza el registro existente
+            em.getTransaction().commit();
+        } catch (RuntimeException ex) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw ex;
         } finally {
             em.close();
         }
