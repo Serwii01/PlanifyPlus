@@ -4,8 +4,13 @@ import jakarta.persistence.*;
 import java.sql.Timestamp;
 
 @Data
+<<<<<<< HEAD
 @Entity
 @Table(name = "usuariosInscripciones")
+=======
+
+@Table(name = "usuarioInscripciones")
+>>>>>>> ivan
 public class UsuarioInscripcionDTO {
 
     @Id
