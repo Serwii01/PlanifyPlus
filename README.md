@@ -21,11 +21,11 @@ Forma parte del proyecto académico de la asignatura **Desarrollo de Interfaces*
 
 | Categoría | Herramienta / Librería |
 |------------|------------------------|
-| Lenguaje | Java 17+ |
+| Lenguaje | Java 21 |
 | Framework GUI | JavaFX |
 | Gestor de dependencias | Maven |
 | Base de datos | MySQL (JDBC / JPA) |
-| API externa | Google Maps / Places |
+| API externa | LeafLet |
 | Arquitectura | MVC (Modelo - Vista - Controlador) |
 | Diseño de interfaz | Scene Builder + CSS |
 | Control de versiones | Git / GitHub |
