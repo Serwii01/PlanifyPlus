@@ -20,11 +20,9 @@
                       promptText="Todas las distancias"
                       style="-fx-pref-width: 155;"/>
             <Label fx:id="lblCiudad" text="Sevilla"
-                   style="-fx-background-color: #e7eaf3; -fx-padding: 4 18 4 18; -fx-background-radius: 16; -fx-font-size: 15; -fx-font-weight: bold;"
-                   visible="false"/>
+                   style="-fx-background-color: #e7eaf3; -fx-padding: 4 18 4 18; -fx-background-radius: 16; -fx-font-size: 15; -fx-font-weight: bold;" visible="false"/>
             <Label fx:id="lblUser" text="S"
-                   style="-fx-background-color: #1563e2; -fx-text-fill: white; -fx-padding: 6 18 6 18; -fx-background-radius: 16; -fx-font-size: 15; -fx-font-weight: bold;"
-                   visible="false"/>
+                   style="-fx-background-color: #1563e2; -fx-text-fill: white; -fx-padding: 6 18 6 18; -fx-background-radius: 16; -fx-font-size: 15; -fx-font-weight: bold;" visible="false"/>
             <Button fx:id="btnPerfil" text="Mi Perfil"
                     onAction="#handlePerfil"
                     style="-fx-background-color: #E5E7EB; -fx-text-fill: #222; -fx-background-radius: 15; -fx-font-size: 15;" visible="false"/>
@@ -39,8 +37,9 @@
                     style="-fx-background-color: #60A5FA; -fx-text-fill: white; -fx-background-radius: 22; -fx-font-size: 15;" visible="true"/>
             <Button fx:id="btnLogin" text="Iniciar sesión"
                     onAction="#handleLogin"
-                    style="-fx-background-color: white; -fx-border-color: #60A5FA; -fx-border-width: 2; -fx-text-fill: #222; -fx-background-radius: 22; -fx-font-size: 15;" visible="true"/>
+                    style="-fx-background-color: white; -fx-border-color: transparent; -fx-border-width: 0; -fx-text-fill: #222; -fx-background-radius: 22; -fx-font-size: 15; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" visible="true"/>
         </HBox>
+
     </top>
     <center>
         <StackPane>

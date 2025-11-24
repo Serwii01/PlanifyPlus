@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'San Francisco';
+    src: url('/fonts/sfproRegular.otf');
+}
+
+@font-face {
+    font-family: 'Nevalisa';
+    src: url('/fonts/Nevalisa.ttf');
+}
+.root {
+    -fx-font-family: 'San Francisco';
+}

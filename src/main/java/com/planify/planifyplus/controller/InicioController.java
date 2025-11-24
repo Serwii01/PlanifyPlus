@@ -4,6 +4,7 @@ import com.planify.planifyplus.dao.ActividadDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.util.Sesion;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.image.ImageView;
@@ -12,6 +13,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class InicioController {
@@ -27,7 +30,7 @@ public class InicioController {
     private final ActividadDAO actividadDAO = new ActividadDAO();
 
     public void initialize() {
-        logoImage.setImage(new Image(getClass().getResource("/imagenes/descarga.png").toExternalForm()));
+        logoImage.setImage(new Image(getClass().getResource("/img/descarga.png").toExternalForm()));
         cargarActividadesComunidad();
         updateUIForSession(Sesion.getUsuarioActual() != null);
 
@@ -44,25 +47,69 @@ public class InicioController {
     }
 
     private Pane crearCardActividad(ActividadDTO act) {
-        VBox vbox = new VBox(7);
-        vbox.setStyle("-fx-padding: 20; -fx-background-color: #FFF; -fx-border-radius: 14; -fx-background-radius: 14; -fx-border-width: 1; -fx-border-color: #e2e8f0; -fx-effect: dropshadow(gaussian, #e0e5ec, 3, 0.2, 0, 4);");
+        VBox vbox = new VBox(12);
+        vbox.setStyle(
+                "-fx-padding: 18 18 18 18;" +
+                        "-fx-background-color: #FFF;" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-width: 1.5;" +
+                        "-fx-border-color: #ececec;"
+        );
+
+        HBox hTituloTipo = new HBox(8);
         Label lblTitulo = new Label(act.getTitulo());
-        lblTitulo.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-font-family: 'Inter';");
-        Label lblTipo = new Label(act.getTipo().toString());
-        lblTipo.setStyle("-fx-background-color: " + getTipoColor(act.getTipo().toString()) + "; -fx-font-size: 13; -fx-padding: 4 18 4 18; -fx-background-radius: 11; -fx-font-weight: bold;");
+        lblTitulo.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+        Label lblTipo = new Label(capitalize(act.getTipo().toString().toLowerCase()));
+        lblTipo.setStyle(
+                "-fx-background-color: " + getTipoColor(act.getTipo().toString()) + ";" +
+                        "-fx-font-size: 13;" +
+                        "-fx-padding: 4 14 4 14;" +
+                        "-fx-background-radius: 11;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #226;"
+        );
+        HBox.setHgrow(lblTitulo, Priority.ALWAYS);
+        hTituloTipo.getChildren().addAll(lblTitulo, lblTipo);
+
         Label lblDesc = new Label(act.getDescripcion());
         lblDesc.setStyle("-fx-text-fill: #4B4B4B; -fx-font-size: 14;");
-        Label lblCiudad = new Label("📍 " + act.getCiudad() + (act.getUbicacion() != "" ? (" · " + act.getUbicacion()) : ""));
-        lblCiudad.setStyle("-fx-text-fill: #1663e3; -fx-font-size: 14;");
-        Label lblFecha = new Label(String.valueOf(act.getFechaHoraInicio()));
-        lblFecha.setStyle("-fx-font-size: 14; -fx-text-fill: #222;");
-        //Label lblAforo = new Label(act.getInscritos() + " / " + act.getAforo() + " inscritos");
-        //lblAforo.setStyle("-fx-font-size: 13; -fx-text-fill: #666;");
+
+        Label lblCiudad = new Label("📍 " + act.getCiudad() + (act.getUbicacion() != null && !act.getUbicacion().isEmpty() ? " · " + act.getUbicacion() : ""));
+        lblCiudad.setStyle("-fx-text-fill: #1663e3; -fx-font-size: 15;");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String fechaFormateada = act.getFechaHoraInicio().format(formatter);
+        HBox hFechaAforo = new HBox(10);
+        Label lblFecha = new Label(fechaFormateada);
+        lblFecha.setStyle("-fx-font-size: 15; -fx-text-fill: #222;");
+        Label lblAforo = new Label("1 / " + act.getAforo() + " inscritos"); // Sustituye "1" por el nº real de inscritos si tienes ese dato
+        HBox.setHgrow(lblFecha, Priority.ALWAYS);
+        hFechaAforo.getChildren().addAll(lblFecha, lblAforo);
+
+        HBox hBoton = new HBox();
         Button btnInscribir = new Button("Inscribirse");
-        btnInscribir.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-background-radius: 18; -fx-font-size: 15; -fx-padding: 5 24 5 24;");
-        //vbox.getChildren().addAll(lblTitulo, lblTipo, lblDesc, lblCiudad, lblFecha, lblAforo, btnInscribir);
+        btnInscribir.setStyle(
+                "-fx-background-color: #3B82F6;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-font-size: 15;" +
+                        "-fx-padding: 6 22 6 22;"
+        );
+        hBoton.getChildren().add(btnInscribir);
+        hBoton.setAlignment(Pos.CENTER_RIGHT);
+
+        vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudad, hFechaAforo, hBoton);
+
         return vbox;
     }
+
+    // Utilidad para capitalizar el primer carácter de una String
+    private String capitalize(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+
 
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
@@ -81,20 +128,32 @@ public class InicioController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/" + fxml));
             Parent root = loader.load();
             Stage stage = (Stage) logoImage.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+
+            // *** IMPORTANTE: Siempre añade el CSS aquí ***
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            stage.setScene(scene);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+
     public void updateUIForSession(boolean loggedIn) {
         btnRegister.setVisible(!loggedIn);
         btnLogin.setVisible(!loggedIn);
+
+        btnPerfil.setVisible(loggedIn);
+        btnPerfil.setText("Mi Perfil");
+        btnLogout.setVisible(loggedIn);
+        btnLogout.setText("Cerrar sesión");
+        btnCrearActividad.setVisible(loggedIn);
+        btnCrearActividad.setText("Crear Actividad");
+
         lblCiudad.setVisible(loggedIn);
         lblUser.setVisible(loggedIn);
-        btnPerfil.setVisible(loggedIn);
-        btnLogout.setVisible(loggedIn);
-        btnCrearActividad.setVisible(loggedIn);
+
         scrollActividadesUsuario.setVisible(loggedIn);
         lblNoSesion.setVisible(!loggedIn);
 
@@ -107,6 +166,7 @@ public class InicioController {
             contenedorUsuario.getChildren().clear();
         }
     }
+
 
     public void onUsuarioLogueado() { updateUIForSession(true); }
 }

@@ -38,7 +38,7 @@
             <ImageView fitHeight="80.0" fitWidth="110.0"
                        pickOnBounds="true" preserveRatio="true">
                 <image>
-                    <Image url="@../imagenes/descarga.png" />
+                    <Image url="@../img/descarga.png" />
                 </image>
             </ImageView>
 

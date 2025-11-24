@@ -46,4 +46,6 @@ public class ActividadDTO {
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
+    @Column(name = "predeterminada", nullable = false)
+    private boolean predeterminada = false;
 }

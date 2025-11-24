@@ -84,7 +84,7 @@
                                        pickOnBounds="true" preserveRatio="true">
                                 <image>
                                     <!-- Icono de calendario (ajusta la ruta si usáis otro) -->
-                                    <Image url="@../imagenes/calendario.png" />
+                                    <Image url="@../img/calendario.png" />
                                 </image>
                             </ImageView>
                             <Label text="Actividades Inscritas">

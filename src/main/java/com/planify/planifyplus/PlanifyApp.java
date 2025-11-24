@@ -1,5 +1,6 @@
 package com.planify.planifyplus;
 
+import com.planify.planifyplus.service.ActividadService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -8,12 +9,30 @@ import javafx.stage.Stage;
 
 public class PlanifyApp extends Application {
 
+    private ActividadService actividadService = new ActividadService();
+
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Crear actividades predeterminadas al iniciar la aplicación
+        actividadService.inicializarActividadesPredeterminadas();
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
         Parent root = loader.load();
+        Scene scene = new Scene(root);
+
+        // <<< Aquí añades tu CSS de fuente >>>
+        scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+        // <<< ------------------------------ >>>
+
         primaryStage.setTitle("PlanifyPlus - Inicio");
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setScene(scene);
+
+        // Al cerrar la ventana, limpiar actividades predeterminadas y cerrar recursos
+        primaryStage.setOnCloseRequest(event -> {
+            actividadService.limpiarActividadesPredeterminadas();
+            actividadService.cerrar();
+        });
+
         primaryStage.show();
     }
 
