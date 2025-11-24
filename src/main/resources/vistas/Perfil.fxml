@@ -22,198 +22,215 @@
 
     <children>
 
-        <!-- CABECERA: casa + nombre + correo + botón editar -->
-        <HBox spacing="16" alignment="CENTER_LEFT"
-              AnchorPane.topAnchor="16.0" AnchorPane.leftAnchor="24.0"
-              AnchorPane.rightAnchor="24.0">
-            <children>
-
-                <!-- Botón casa (volver al Inicio) -->
-                <Button fx:id="btnHomePerfil"
-                        text="🏠"
-                        onAction="#onIrInicio"
-                        style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"/>
-
-                <!-- Nombre + email (los rellena el controlador con Sesion) -->
-                <VBox spacing="4">
-                    <children>
-                        <Label fx:id="lblNombreUsuario" text="Nombre de Usuario">
-                            <font>
-                                <Font size="24.0" />
-                            </font>
-                        </Label>
-                        <Label fx:id="lblEmailUsuario" text="correo@ejemplo.com"
-                               style="-fx-text-fill: #6B7280;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                    </children>
-                </VBox>
-
-                <Region HBox.hgrow="ALWAYS"/>
-
-                <!-- Botón Editar Perfil -->
-                <Button fx:id="btnEditarPerfil"
-                        text="Editar Perfil"
-                        onAction="#onIrConfPerfil"
-                        style="-fx-background-radius: 20; -fx-padding: 8 18 8 18; -fx-background-color: #FFFFFF; -fx-cursor: hand; -fx-border-color: #E5E7EB; -fx-border-radius: 20;">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Button>
-
-            </children>
-        </HBox>
-
-        <!-- CONTENIDO PRINCIPAL: ACTIVIDADES INSCRITAS + CALENDARIO -->
-        <HBox spacing="24"
-              AnchorPane.topAnchor="96.0"
-              AnchorPane.leftAnchor="24.0"
-              AnchorPane.rightAnchor="24.0"
+        <!-- CONTENEDOR GENERAL -->
+        <VBox spacing="24"
+              alignment="TOP_CENTER"
+              AnchorPane.topAnchor="24.0"
+              AnchorPane.leftAnchor="0.0"
+              AnchorPane.rightAnchor="0.0"
               AnchorPane.bottomAnchor="24.0">
 
-            <!-- COLUMNA IZQUIERDA: ACTIVIDADES INSCRITAS -->
-            <VBox spacing="12" prefWidth="480.0">
+            <!-- CABECERA -->
+            <HBox spacing="16" alignment="CENTER_LEFT"
+                  maxWidth="1450.0"
+                  style="-fx-padding: 4 0 8 0;">
                 <children>
 
-                    <!-- Título con icono -->
-                    <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Button fx:id="btnHomePerfil"
+                            text="🏠"
+                            onAction="#onIrInicio"
+                            style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"/>
+
+                    <VBox spacing="4">
                         <children>
-                            <ImageView fitHeight="24.0" fitWidth="24.0"
-                                       pickOnBounds="true" preserveRatio="true">
-                                <image>
-                                    <!-- Icono de calendario (ajusta la ruta si usáis otro) -->
-                                    <Image url="@../img/calendario.png" />
-                                </image>
-                            </ImageView>
-                            <Label text="Actividades Inscritas">
+                            <Label fx:id="lblNombreUsuario" text="Nombre de Usuario"
+                                   style="-fx-font-weight: bold;">
                                 <font>
-                                    <Font size="18.0"/>
+                                    <Font size="26.0" />
                                 </font>
                             </Label>
-                        </children>
-                    </HBox>
-
-                    <!-- Tarjeta de actividades -->
-                    <Pane prefHeight="260.0"
-                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 24; -fx-border-color: #E5E7EB; -fx-border-radius: 20;">
-                        <children>
-
-                            <!-- Contenedor donde el controlador podrá meter tarjetas de actividades -->
-                            <VBox fx:id="vboxActividadesInscritas"
-                                  spacing="16" alignment="CENTER">
-                                <!-- Estado por defecto: sin actividades -->
-                                <children>
-                                    <Label text="Aún no estás inscrito en ninguna actividad"
-                                           style="-fx-text-fill: #6B7280;">
-                                        <font>
-                                            <Font size="16.0"/>
-                                        </font>
-                                    </Label>
-                                    <Button fx:id="btnExplorarActividades"
-                                            text="Explorar Actividades"
-                                            onAction="#onExplorarActividades"
-                                            style="-fx-background-color: #4C8DF6; -fx-text-fill: white; -fx-background-radius: 24; -fx-cursor: hand;"
-                                            prefWidth="280.0" prefHeight="44.0">
-                                        <font>
-                                            <Font size="16.0"/>
-                                        </font>
-                                    </Button>
-                                </children>
-                            </VBox>
-
-                        </children>
-                    </Pane>
-
-                    <Region VBox.vgrow="ALWAYS"/>
-
-                </children>
-            </VBox>
-
-            <!-- COLUMNA DERECHA: CALENDARIO -->
-            <VBox spacing="12" prefWidth="420.0">
-                <children>
-
-                    <!-- Título -->
-                    <Label text="Calendario de Actividades">
-                        <font>
-                            <Font size="18.0"/>
-                        </font>
-                    </Label>
-
-                    <!-- Tarjeta del calendario -->
-                    <VBox spacing="8"
-                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 16; -fx-border-color: #E5E7EB; -fx-border-radius: 20;">
-
-                        <!-- Cabecera: mes / año + flechas -->
-                        <HBox spacing="8" alignment="CENTER">
-                            <children>
-                                <Button fx:id="btnMesAnterior"
-                                        text="‹"
-                                        onAction="#onMesAnterior"
-                                        style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand;"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Label fx:id="lblMesAnio" text="October 2025">
-                                    <font>
-                                        <Font size="16.0" />
-                                    </font>
-                                </Label>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Button fx:id="btnMesSiguiente"
-                                        text="›"
-                                        onAction="#onMesSiguiente"
-                                        style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand;"/>
-                            </children>
-                        </HBox>
-
-                        <!-- Días de la semana (lunes a domingo) -->
-                        <HBox spacing="12" alignment="CENTER">
-                            <children>
-                                <Text text="Mo"/>   <!-- Monday -->
-                                <Text text="Tu"/>   <!-- Tuesday -->
-                                <Text text="We"/>   <!-- Wednesday -->
-                                <Text text="Th"/>   <!-- Thursday -->
-                                <Text text="Fr"/>   <!-- Friday -->
-                                <Text text="Sa"/>   <!-- Saturday -->
-                                <Text text="Su"/>   <!-- Sunday -->
-                            </children>
-                        </HBox>
-
-                        <!-- Grid de días del mes (lo rellena el controlador) -->
-                        <GridPane fx:id="gridCalendario" hgap="8" vgap="8">
-                            <!-- El PerfilController generará dinámicamente los Labels de días -->
-                        </GridPane>
-
-                    </VBox>
-
-                    <!-- Leyenda -->
-                    <VBox spacing="8">
-                        <children>
-                            <Label text="Leyenda:">
+                            <Label fx:id="lblEmailUsuario" text="correo@ejemplo.com"
+                                   style="-fx-text-fill: #6B7280;">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
                             </Label>
-                            <HBox spacing="8" alignment="CENTER_LEFT">
-                                <children>
-                                    <Circle radius="8.0" fill="#4C8DF6"/>
-                                    <Label text="Días con actividades">
-                                        <font>
-                                            <Font size="14.0" />
-                                        </font>
-                                    </Label>
-                                </children>
-                            </HBox>
                         </children>
                     </VBox>
 
-                    <Region VBox.vgrow="ALWAYS"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Button fx:id="btnEditarPerfil"
+                            text="Editar Perfil"
+                            onAction="#onIrConfPerfil"
+                            style="-fx-background-radius: 999; -fx-padding: 8 22 8 22;
+                                   -fx-background-color: #FFFFFF; -fx-cursor: hand;
+                                   -fx-border-color: #E5E7EB; -fx-border-radius: 999;">
+                        <font>
+                            <Font size="14.0" />
+                        </font>
+                    </Button>
 
                 </children>
-            </VBox>
+            </HBox>
 
-        </HBox>
+            <!-- CONTENIDO PRINCIPAL -->
+            <HBox spacing="32"
+                  alignment="TOP_CENTER"
+                  maxWidth="1450.0">
+
+                <!-- IZQUIERDA: ACTIVIDADES INSCRITAS -->
+                <VBox spacing="16" prefWidth="650.0">
+                    <children>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <children>
+                                <ImageView fitHeight="24.0" fitWidth="24.0"
+                                           pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../imagenes/calendario.png" />
+                                    </image>
+                                </ImageView>
+                                <Label text="Actividades Inscritas">
+                                    <font>
+                                        <Font size="18.0"/>
+                                    </font>
+                                </Label>
+                            </children>
+                        </HBox>
+
+                        <Pane prefHeight="260.0"
+                              style="-fx-background-color: #FFFFFF;
+                                     -fx-background-radius: 20;
+                                     -fx-padding: 32;
+                                     -fx-border-color: #E5E7EB;
+                                     -fx-border-radius: 20;">
+                            <children>
+
+                                <VBox fx:id="vboxActividadesInscritas"
+                                      spacing="16" alignment="CENTER">
+                                    <children>
+                                        <Label text="Aún no estás inscrito en ninguna actividad"
+                                               style="-fx-text-fill: #6B7280;">
+                                            <font>
+                                                <Font size="16.0"/>
+                                            </font>
+                                        </Label>
+                                        <Button fx:id="btnExplorarActividades"
+                                                text="Explorar Actividades"
+                                                onAction="#onExplorarActividades"
+                                                style="-fx-background-color: #4C8DF6;
+                                                       -fx-text-fill: white;
+                                                       -fx-background-radius: 999;
+                                                       -fx-cursor: hand;"
+                                                prefWidth="320.0" prefHeight="46.0">
+                                            <font>
+                                                <Font size="16.0"/>
+                                            </font>
+                                        </Button>
+                                    </children>
+                                </VBox>
+
+                            </children>
+                        </Pane>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                    </children>
+                </VBox>
+
+                <!-- DERECHA: CALENDARIO -->
+                <VBox spacing="16" prefWidth="480.0">
+                    <children>
+
+                        <Label text="Calendario de Actividades">
+                            <font>
+                                <Font size="18.0"/>
+                            </font>
+                        </Label>
+
+                        <VBox spacing="10"
+                              style="-fx-background-color: #FFFFFF;
+                                     -fx-background-radius: 20;
+                                     -fx-padding: 20;
+                                     -fx-border-color: #E5E7EB;
+                                     -fx-border-radius: 20;">
+
+                            <!-- Cabecera mes/año + flechas -->
+                            <HBox spacing="8" alignment="CENTER">
+                                <children>
+                                    <Button fx:id="btnMesAnterior"
+                                            text="‹"
+                                            onAction="#onMesAnterior"
+                                            style="-fx-background-color: transparent;
+                                                   -fx-font-size: 18px;
+                                                   -fx-cursor: hand;"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblMesAnio" text="October 2025">
+                                        <font>
+                                            <Font size="16.0" />
+                                        </font>
+                                    </Label>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Button fx:id="btnMesSiguiente"
+                                            text="›"
+                                            onAction="#onMesSiguiente"
+                                            style="-fx-background-color: transparent;
+                                                   -fx-font-size: 18px;
+                                                   -fx-cursor: hand;"/>
+                                </children>
+                            </HBox>
+
+                            <!-- Grid ÚNICO: cabecera días + números -->
+                            <GridPane fx:id="gridCalendario" hgap="10" vgap="10">
+
+                                <!-- Fila 0: nombres de los días (Lunes a Domingo) -->
+                                <children>
+                                    <Text text="Mo" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                                    <Text text="Tu" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                    <Text text="We" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                                    <Text text="Th" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+                                    <Text text="Fr" GridPane.columnIndex="4" GridPane.rowIndex="0"/>
+                                    <Text text="Sa" GridPane.columnIndex="5" GridPane.rowIndex="0"/>
+                                    <Text text="Su" GridPane.columnIndex="6" GridPane.rowIndex="0"/>
+                                </children>
+
+                            </GridPane>
+
+                        </VBox>
+
+                        <!-- Leyenda -->
+                        <VBox spacing="8">
+                            <children>
+                                <Label text="Leyenda:">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <children>
+                                        <Circle radius="8.0" fill="#4C8DF6"/>
+                                        <Label text="Días con actividades">
+                                            <font>
+                                                <Font size="14.0" />
+                                            </font>
+                                        </Label>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                    </children>
+                </VBox>
+
+            </HBox>
+
+        </VBox>
 
     </children>
 </AnchorPane>
+
+
+
