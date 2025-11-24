@@ -116,4 +116,5 @@ public class UsuarioDAO {
             em.close();
         }
     }
+
 }

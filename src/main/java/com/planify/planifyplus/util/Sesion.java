@@ -37,4 +37,26 @@ public class Sesion {
     public static long getIdUsuario() {
         return usuarioActual != null ? usuarioActual.getId() : -1;
     }
+
+    /**
+     * Actualiza los datos del usuario guardado en sesión después
+     * de modificar el perfil.
+     */
+    public static void actualizarUsuarioActual(UsuarioDTO usuarioActualizado) {
+        if (usuarioActual == null) {
+            usuarioActual = usuarioActualizado;
+            return;
+        }
+
+        if (usuarioActual.getId() == usuarioActualizado.getId()) {
+            usuarioActual.setNombre(usuarioActualizado.getNombre());
+            usuarioActual.setEmail(usuarioActualizado.getEmail());
+            usuarioActual.setContrasena(usuarioActualizado.getContrasena());
+            usuarioActual.setCiudad(usuarioActualizado.getCiudad());
+        } else {
+            // Por si el objeto viene de otra consulta, lo sustituimos
+            usuarioActual = usuarioActualizado;
+        }
+    }
 }
+
