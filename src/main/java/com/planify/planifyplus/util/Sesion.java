@@ -24,18 +24,19 @@ public class Sesion {
 
     // ================== MÉTODOS EXTRA ==================
 
-    /**
-     * Indica si hay un usuario con sesión iniciada.
-     */
+    /** Indica si hay un usuario con sesión iniciada. */
     public static boolean haySesion() {
         return usuarioActual != null;
     }
 
-    /**
-     * Devuelve el id del usuario logueado o -1 si no hay sesión.
-     */
+    /** Devuelve el id del usuario logueado o -1 si no hay sesión. */
     public static long getIdUsuario() {
         return usuarioActual != null ? usuarioActual.getId() : -1;
+    }
+
+    /** Devuelve si el usuario actual ES ADMIN. */
+    public static boolean esAdmin() {
+        return usuarioActual != null && usuarioActual.isEsAdmin();
     }
 
     /**
@@ -53,10 +54,9 @@ public class Sesion {
             usuarioActual.setEmail(usuarioActualizado.getEmail());
             usuarioActual.setContrasena(usuarioActualizado.getContrasena());
             usuarioActual.setCiudad(usuarioActualizado.getCiudad());
+            usuarioActual.setEsAdmin(usuarioActualizado.isEsAdmin());
         } else {
-            // Por si el objeto viene de otra consulta, lo sustituimos
             usuarioActual = usuarioActualizado;
         }
     }
 }
-
