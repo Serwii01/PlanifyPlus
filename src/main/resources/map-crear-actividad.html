@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch/leaflet-opencage-geosearch.css" />
+    <style>
+        html, body, #map { height: 100%; margin: 0; padding: 0; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@opencage/geosearch-bundle"></script>
+<script src="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch"></script>
+
+<script>
+    let map, marker;
+    let selected = null; // {lat,lng,label,city}
+
+    document.addEventListener('DOMContentLoaded', () => {
+      map = L.map('map').setView([40.4168, -3.7038], 6);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const options = {
+        key: 'TU_API_KEY_GEOSEARCH',
+        position: 'topright'
+      };
+
+      const geosearchControl = L.Control.openCageGeosearch(options).addTo(map);
+
+      geosearchControl.on('markgeocode', function(e) {
+        const latlng = e.geocode.center;
+        const props = e.geocode.properties || {};
+        const city = props.city || props.town || props.village || '';
+        selected = {
+          lat: latlng.lat,
+          lng: latlng.lng,
+          label: e.geocode.name,
+          city: city
+        };
+
+        if (marker) marker.setLatLng(latlng);
+        else marker = L.marker(latlng).addTo(map);
+
+        map.setView(latlng, 15);
+      });
+    });
+
+    // función que llamará JavaFX al guardar
+    function getSelectedLocation() {
+      return selected; // puede ser null si no se ha elegido nada
+    }
+</script>
+</body>
+</html>

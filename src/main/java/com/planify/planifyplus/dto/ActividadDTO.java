@@ -1,7 +1,8 @@
 package com.planify.planifyplus.dto;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -28,16 +29,19 @@ public class ActividadDTO {
     @Column(nullable = false)
     private TipoActividad tipo;
 
-    @Column(length = 150, nullable = false)
+    // Dirección formateada devuelta por el geocoder (ej. "Palacio de San Telmo, Sevilla, España")
+    @Column(length = 255, nullable = false)
     private String ubicacion;
 
+    // Ciudad extraída del resultado del geocoder (opcional)
     @Column(length = 100)
     private String ciudad;
 
-    @Column(precision = 9, scale = 6)
+    // Coordenadas para Leaflet (6 decimales de precisión)
+    @Column(precision = 9, scale = 6, nullable = false)
     private BigDecimal latitud;
 
-    @Column(precision = 9, scale = 6)
+    @Column(precision = 9, scale = 6, nullable = false)
     private BigDecimal longitud;
 
     @Column(nullable = false)
