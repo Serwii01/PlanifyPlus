@@ -27,11 +27,15 @@ public class InicioController {
     @FXML private VBox contenedorComunidad, contenedorUsuario;
     @FXML private ScrollPane scrollActividadesComunidad, scrollActividadesUsuario;
 
+    // Badge ADMIN en la barra superior (añadido en el FXML)
+    @FXML private Label lblAdminBadge;
+
     private final ActividadDAO actividadDAO = new ActividadDAO();
 
     public void initialize() {
         logoImage.setImage(new Image(getClass().getResource("/img/descarga.png").toExternalForm()));
 
+        // Cargamos las actividades de la comunidad (predeterminadas + de otros usuarios)
         cargarActividadesComunidad();
 
         boolean loggedIn = Sesion.getUsuarioActual() != null;
@@ -40,18 +44,55 @@ public class InicioController {
             cargarActividadesUsuario();
         }
 
+        // Ajustar visibilidad según rol (admin / usuario normal)
+        configurarUIRol();
+
         VBox.setVgrow(scrollActividadesComunidad, Priority.ALWAYS);
         VBox.setVgrow(scrollActividadesUsuario, Priority.ALWAYS);
     }
 
+    // ============================================================
+    //                CARGA DE ACTIVIDADES
+    // ============================================================
+
+    /**
+     * Actividades de la comunidad:
+     * - Siempre: TODAS las predeterminadas.
+     * - Además: TODAS las NO predeterminadas creadas por otros usuarios.
+     *   (si NO hay sesión, se muestran TODAS las no predeterminadas).
+     */
     private void cargarActividadesComunidad() {
         contenedorComunidad.getChildren().clear();
-        List<ActividadDTO> actividades = actividadDAO.obtenerPredeterminadas();
-        for (ActividadDTO act : actividades) {
+
+        Long idUsuarioActual = null;
+        if (Sesion.getUsuarioActual() != null) {
+            idUsuarioActual = Sesion.getUsuarioActual().getId();
+        }
+
+        // 1) Predeterminadas
+        List<ActividadDTO> predeterminadas = actividadDAO.obtenerPredeterminadas();
+        for (ActividadDTO act : predeterminadas) {
+            contenedorComunidad.getChildren().add(crearCardActividad(act));
+        }
+
+        // 2) No predeterminadas (creadas por usuarios)
+        List<ActividadDTO> creadasUsuarios = actividadDAO.obtenerNoPredeterminadas();
+        for (ActividadDTO act : creadasUsuarios) {
+            // Si hay sesión y el creador es el usuario actual -> NO la mostramos aquí
+            // porque ya irá en "Mis actividades creadas".
+            if (idUsuarioActual != null &&
+                    act.getCreador() != null &&
+                    act.getCreador().getId() == idUsuarioActual) {
+                continue;
+            }
             contenedorComunidad.getChildren().add(crearCardActividad(act));
         }
     }
 
+    /**
+     * Mis actividades creadas:
+     * - Solo las NO predeterminadas cuyo creador es el usuario actual.
+     */
     private void cargarActividadesUsuario() {
         contenedorUsuario.getChildren().clear();
 
@@ -59,11 +100,17 @@ public class InicioController {
             return;
         }
 
-        List<ActividadDTO> actividades = actividadDAO.obtenerNoPredeterminadas();
+        long idUsuario = Sesion.getUsuarioActual().getId();
+        List<ActividadDTO> actividades = actividadDAO.obtenerCreadasPorUsuario(idUsuario);
+
         for (ActividadDTO act : actividades) {
             contenedorUsuario.getChildren().add(crearCardActividad(act));
         }
     }
+
+    // ============================================================
+    //                CREACIÓN DE LA CARD
+    // ============================================================
 
     private Pane crearCardActividad(ActividadDTO act) {
         VBox vbox = new VBox(12);
@@ -94,11 +141,11 @@ public class InicioController {
         Label lblDesc = new Label(act.getDescripcion());
         lblDesc.setStyle("-fx-text-fill: #4B4B4B; -fx-font-size: 14;");
 
-        Label lblCiudad = new Label("📍 " + act.getCiudad() +
+        Label lblCiudadAct = new Label("📍 " + act.getCiudad() +
                 (act.getUbicacion() != null && !act.getUbicacion().isEmpty()
                         ? " · " + act.getUbicacion()
                         : ""));
-        lblCiudad.setStyle("-fx-text-fill: #1663e3; -fx-font-size: 15;");
+        lblCiudadAct.setStyle("-fx-text-fill: #1663e3; -fx-font-size: 15;");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String fechaFormateada = act.getFechaHoraInicio().format(formatter);
@@ -109,7 +156,9 @@ public class InicioController {
         HBox.setHgrow(lblFecha, Priority.ALWAYS);
         hFechaAforo.getChildren().addAll(lblFecha, lblAforo);
 
-        HBox hBoton = new HBox();
+        HBox hBoton = new HBox(8);
+        hBoton.setAlignment(Pos.CENTER_RIGHT);
+
         Button btnInscribir = new Button("Inscribirse");
         btnInscribir.setStyle(
                 "-fx-background-color: #3B82F6;" +
@@ -119,9 +168,26 @@ public class InicioController {
                         "-fx-padding: 6 22 6 22;"
         );
         hBoton.getChildren().add(btnInscribir);
-        hBoton.setAlignment(Pos.CENTER_RIGHT);
 
-        vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudad, hFechaAforo, hBoton);
+        // Si es admin, añadimos botón rojo "Eliminar"
+        if (Sesion.esAdmin()) {
+            Button btnEliminar = new Button("Eliminar");
+            btnEliminar.setStyle(
+                    "-fx-background-color: #DC2626;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-background-radius: 18;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-padding: 6 18 6 18;"
+            );
+            btnEliminar.setOnAction(e -> onEliminarActividad(act));
+            hBoton.getChildren().add(btnEliminar);
+
+
+             btnInscribir.setVisible(false);
+             btnInscribir.setManaged(false);
+        }
+
+        vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
 
         return vbox;
     }
@@ -136,6 +202,8 @@ public class InicioController {
                 : "#bbf7d0";
     }
 
+    // ===================== NAVEGACIÓN =====================
+
     @FXML private void handleRegister() { irAVista("registro.fxml"); }
     @FXML private void handleLogin() { irAVista("login.fxml"); }
 
@@ -143,6 +211,9 @@ public class InicioController {
     private void handleLogout() {
         Sesion.cerrarSesion();
         updateUIForSession(false);
+        configurarUIRol();
+        cargarActividadesComunidad();   // reconstruir cards sin botones de admin
+        contenedorUsuario.getChildren().clear();
     }
 
     @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
@@ -160,6 +231,8 @@ public class InicioController {
             e.printStackTrace();
         }
     }
+
+    // ===================== SESIÓN / UI =====================
 
     public void updateUIForSession(boolean loggedIn) {
         btnRegister.setVisible(!loggedIn);
@@ -191,5 +264,63 @@ public class InicioController {
 
     public void onUsuarioLogueado() {
         updateUIForSession(true);
+        configurarUIRol();
+        cargarActividadesComunidad(); // reconstruir cards ya con lógica según usuario
+    }
+
+    // ===================== ROL / ADMIN =====================
+
+    private void configurarUIRol() {
+        boolean esAdmin = Sesion.esAdmin();
+
+        if (lblAdminBadge != null) {
+            lblAdminBadge.setVisible(esAdmin);
+            lblAdminBadge.setManaged(esAdmin);
+        }
+
+        if (cmbDistancia != null) {
+            cmbDistancia.setVisible(!esAdmin);
+            cmbDistancia.setManaged(!esAdmin);
+        }
+
+        if (lblCiudad != null) {
+            if (esAdmin) {
+                lblCiudad.setVisible(false);
+                lblCiudad.setManaged(false);
+            } else {
+                lblCiudad.setManaged(true);
+            }
+        }
+    }
+
+    // ===================== ELIMINAR ACTIVIDAD (ADMIN) =====================
+
+    private void onEliminarActividad(ActividadDTO act) {
+        if (!Sesion.esAdmin()) {
+            return; // seguridad extra
+        }
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar actividad");
+        alert.setHeaderText("¿Eliminar actividad?");
+        alert.setContentText(
+                "Esta acción no se puede deshacer.\n\n" +
+                        "La actividad \"" + act.getTitulo() + "\" será eliminada."
+        );
+
+        ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
+
+        alert.getButtonTypes().setAll(btnCancelar, btnEliminar);
+
+        ButtonType resultado = alert.showAndWait().orElse(btnCancelar);
+        if (resultado == btnEliminar) {
+            actividadDAO.eliminarPorId(act.getId());
+            cargarActividadesComunidad();
+            if (Sesion.getUsuarioActual() != null) {
+                cargarActividadesUsuario();
+            }
+        }
     }
 }
+

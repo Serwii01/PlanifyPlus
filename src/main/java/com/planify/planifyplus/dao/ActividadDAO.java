@@ -15,6 +15,10 @@ public class ActividadDAO {
         em = Persistence.createEntityManagerFactory("planifyPU").createEntityManager();
     }
 
+    // ============================================================
+    //   MÉTODOS ORIGINALES (RESPETADOS)
+    // ============================================================
+
     // Todas (por si la usas en algún sitio)
     public List<ActividadDTO> obtenerTodas() {
         return em.createQuery(
@@ -23,7 +27,7 @@ public class ActividadDAO {
         ).getResultList();
     }
 
-    // SOLO actividades predeterminadas (las del service)
+    // SOLO actividades predeterminadas
     public List<ActividadDTO> obtenerPredeterminadas() {
         return em.createQuery(
                 "SELECT a FROM ActividadDTO a " +
@@ -72,13 +76,11 @@ public class ActividadDAO {
         }
     }
 
-    // Cuenta TODAS (si la necesitáis)
     public long contar() {
         return em.createQuery("SELECT COUNT(a) FROM ActividadDTO a", Long.class)
                 .getSingleResult();
     }
 
-    // >>> NUEVO: cuenta solo las predeterminadas
     public long contarPredeterminadas() {
         return em.createQuery(
                         "SELECT COUNT(a) FROM ActividadDTO a WHERE a.predeterminada = true",
@@ -92,4 +94,45 @@ public class ActividadDAO {
             em.close();
         }
     }
+
+    // ============================================================
+    //               MÉTODOS NUEVOS
+    // ============================================================
+
+    /**
+     * Elimina una actividad por su ID. Solo debe usarse por administradores.
+     */
+    public void eliminarPorId(Long id) {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            ActividadDTO act = em.find(ActividadDTO.class, id);
+            if (act != null) {
+                em.remove(act);
+            }
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Devuelve las actividades NO predeterminadas creadas por un usuario concreto.
+     * Sirve para rellenar "Mis actividades creadas".
+     */
+    public List<ActividadDTO> obtenerCreadasPorUsuario(long idUsuario) {
+        return em.createQuery(
+                        "SELECT a FROM ActividadDTO a " +
+                                "WHERE a.predeterminada = false " +
+                                "AND a.creador.id = :idUsuario " +
+                                "ORDER BY a.fechaHoraInicio ASC",
+                        ActividadDTO.class
+                )
+                .setParameter("idUsuario", idUsuario)
+                .getResultList();
+    }
 }
+
+
+

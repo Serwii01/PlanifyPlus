@@ -123,6 +123,13 @@ public class CrearActividadController {
         String descripcion = txtDescripcion.getText().trim();
         if (descripcion.isEmpty()) { error("La descripción es obligatoria."); return; }
 
+        // Asegurarnos de que hay usuario logueado (también para admin)
+        UsuarioDTO creador = Sesion.getUsuarioActual();
+        if (creador == null) {
+            error("Debes iniciar sesión para crear una actividad.");
+            irA("/vistas/login.fxml");
+            return;
+        }
 
         // -------- CREAR OBJETO ACTIVIDAD --------
         ActividadDTO actividad = new ActividadDTO();
@@ -134,11 +141,14 @@ public class CrearActividadController {
         actividad.setCiudad(ciudad);
         actividad.setAforo(aforo);
         actividad.setCreadoEn(LocalDateTime.now());
+        actividad.setPredeterminada(false);
 
-        // Coordenadas opcionales → null (tu DTO lo permite)
+        // Coordenadas opcionales → null
         actividad.setLatitud(null);
         actividad.setLongitud(null);
-        actividad.setPredeterminada(false);
+
+        // IMPORTANTE: guardar quién creó la actividad
+        actividad.setCreador(creador);
 
         // -------- GUARDAR EN BD --------
         actividadDAO.guardar(actividad);

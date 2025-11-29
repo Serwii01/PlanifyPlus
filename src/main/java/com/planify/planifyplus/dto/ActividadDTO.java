@@ -48,4 +48,15 @@ public class ActividadDTO {
 
     @Column(name = "predeterminada", nullable = false)
     private boolean predeterminada = false;
+
+    // ================= NUEVO: USUARIO CREADOR =================
+
+    /**
+     * Usuario que ha creado esta actividad.
+     * Es nullable para que las actividades predeterminadas del servicio
+     * sigan funcionando aunque no tengan creador asociado.
+     */
+    @ManyToOne
+    @JoinColumn(name = "creado_por_id", nullable = true)
+    private UsuarioDTO creador;
 }
