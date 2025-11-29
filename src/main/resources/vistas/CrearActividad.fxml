@@ -1,14 +1,183 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="CONTROLLER_NAME"
-            prefHeight="400.0" prefWidth="600.0">
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.planify.planifyplus.controller.CrearActividadController"
+            style="-fx-background-color: #F5F8FB;">
 
-</AnchorPane>
+    <!-- BARRA SUPERIOR -->
+    <top>
+        <HBox spacing="18" alignment="CENTER_LEFT"
+              style="-fx-padding: 22; -fx-background-color: #F2F4F8;">
+
+            <!-- Botón Inicio -->
+            <Button fx:id="btnHome"
+                    text="🏠"
+                    onAction="#onIrInicio"
+                    style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"/>
+
+            <!-- Logo + nombre app -->
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <ImageView fx:id="logoImage"
+                           fitHeight="34" fitWidth="34"
+                           preserveRatio="true" pickOnBounds="true"/>
+                <Label text="PlanifyPlus"
+                       style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
+            </HBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Info usuario (ya está logueado) -->
+            <Label fx:id="lblCiudad" text="Ciudad"
+                   style="-fx-background-color: #e7eaf3;
+                          -fx-padding: 4 18 4 18;
+                          -fx-background-radius: 16;
+                          -fx-font-size: 15;
+                          -fx-font-weight: bold;"/>
+
+            <Label fx:id="lblUser" text="U"
+                   style="-fx-background-color: #1563e2;
+                          -fx-text-fill: white;
+                          -fx-padding: 6 18 6 18;
+                          -fx-background-radius: 16;
+                          -fx-font-size: 15;
+                          -fx-font-weight: bold;"/>
+
+            <Button fx:id="btnPerfil"
+                    text="Mi Perfil"
+                    onAction="#onIrPerfil"
+                    style="-fx-background-color: #E5E7EB;
+                           -fx-text-fill: #222;
+                           -fx-background-radius: 15;
+                           -fx-font-size: 15;"/>
+
+            <Button fx:id="btnLogout"
+                    text="Cerrar sesión"
+                    onAction="#onLogout"
+                    style="-fx-background-color: #E5E7EB;
+                           -fx-text-fill: #222;
+                           -fx-background-radius: 15;
+                           -fx-font-size: 15;"/>
+        </HBox>
+    </top>
+
+    <!-- CONTENIDO CENTRAL: FORMULARIO CREAR ACTIVIDAD -->
+    <center>
+        <StackPane>
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+                <VBox alignment="TOP_CENTER"
+                      spacing="24"
+                      style="-fx-padding: 36 0 36 0;">
+
+                    <Label text="Crear nueva actividad"
+                           style="-fx-font-size: 22;
+                                  -fx-text-fill: #1563e2;
+                                  -fx-font-weight: bold;"/>
+
+                    <!-- Tarjeta blanca con formulario -->
+                    <BorderPane maxWidth="900"
+                                style="-fx-background-color: white;
+                                       -fx-background-radius: 18;
+                                       -fx-padding: 28;
+                                       -fx-effect: dropshadow(gaussian, #D0D7E2, 10, 0.35, 0, 4);">
+
+                        <center>
+                            <GridPane hgap="24" vgap="16">
+
+                                <!-- Título -->
+                                <Label text="Título"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                <TextField fx:id="txtTitulo"
+                                           promptText="Ej: Partido de fútbol amistoso"
+                                           GridPane.rowIndex="1" GridPane.columnIndex="0"
+                                           GridPane.columnSpan="2"
+                                           style="-fx-pref-width: 500;"/>
+
+                                <!-- Categoría -->
+                                <Label text="Categoría"
+                                       GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                                <ComboBox fx:id="cmbCategoria"
+                                          promptText="Selecciona categoría"
+                                          GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+
+                                <!-- Ciudad -->
+                                <Label text="Ciudad"
+                                       GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                                <TextField fx:id="txtCiudad"
+                                           promptText="Sevilla..."
+                                           GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+
+                                <!-- Lugar -->
+                                <Label text="Lugar"
+                                       GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                                <TextField fx:id="txtLugar"
+                                           promptText="Parque, polideportivo, centro cultural..."
+                                           GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                                <!-- Fecha -->
+                                <Label text="Fecha"
+                                       GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                                <DatePicker fx:id="dpFecha"
+                                            GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+
+                                <!-- Hora -->
+                                <Label text="Hora"
+                                       GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                                <TextField fx:id="txtHora"
+                                           promptText="13:30"
+                                           GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+                                <!-- Plazas máximas -->
+                                <Label text="Plazas máximas"
+                                       GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                                <Spinner fx:id="spnPlazas"
+                                         GridPane.rowIndex="9" GridPane.columnIndex="0"
+                                         style="-fx-pref-width: 120;"/>
+
+                                <!-- Descripción -->
+                                <Label text="Descripción"
+                                       GridPane.rowIndex="10" GridPane.columnIndex="0"
+                                       GridPane.columnSpan="2"/>
+                                <TextArea fx:id="txtDescripcion"
+                                          promptText="Describe brevemente la actividad..."
+                                          GridPane.rowIndex="11" GridPane.columnIndex="0"
+                                          GridPane.columnSpan="2"
+                                          prefRowCount="4"/>
+                            </GridPane>
+                        </center>
+
+                        <!-- Botones abajo -->
+                        <bottom>
+                            <HBox spacing="12" alignment="CENTER_RIGHT"
+                                  style="-fx-padding: 22 0 0 0;">
+                                <Region HBox.hgrow="ALWAYS"/>
+
+                                <Button fx:id="btnCancelar"
+                                        text="Cancelar"
+                                        onAction="#onCancelar"
+                                        style="-fx-background-color: #E5E7EB;
+                                               -fx-text-fill: #111827;
+                                               -fx-background-radius: 20;"/>
+
+                                <Button fx:id="btnGuardar"
+                                        text="Crear actividad"
+                                        onAction="#onGuardarActividad"
+                                        style="-fx-background-color: #1563e2;
+                                               -fx-text-fill: white;
+                                               -fx-background-radius: 22;
+                                               -fx-padding: 8 26;
+                                               -fx-effect: dropshadow(gaussian, #1563e2, 3, 0.4, 0, 2);"/>
+                            </HBox>
+                        </bottom>
+
+                    </BorderPane>
+                </VBox>
+            </ScrollPane>
+        </StackPane>
+    </center>
+</BorderPane>
