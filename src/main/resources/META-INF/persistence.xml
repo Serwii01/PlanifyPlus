@@ -13,9 +13,13 @@
         <properties>
             <!-- JDBC -->
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+<<<<<<< HEAD
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3307/planifyplus"/>
+=======
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/planifyplus?useSSL=false&amp;serverTimezone=UTC"/>
+>>>>>>> origin/juanka
             <property name="jakarta.persistence.jdbc.user" value="root"/>
-            <property name="jakarta.persistence.jdbc.password" value="ivan"/>
+            <property name="jakarta.persistence.jdbc.password" value="root"/>
 
 
             <!-- HIBERNATE -->
