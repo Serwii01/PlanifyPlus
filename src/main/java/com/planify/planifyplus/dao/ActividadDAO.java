@@ -15,8 +15,32 @@ public class ActividadDAO {
         em = Persistence.createEntityManagerFactory("planifyPU").createEntityManager();
     }
 
+    // Todas (por si la usas en algún sitio)
     public List<ActividadDTO> obtenerTodas() {
-        return em.createQuery("SELECT a FROM ActividadDTO a ORDER BY a.fechaHoraInicio ASC", ActividadDTO.class).getResultList();
+        return em.createQuery(
+                "SELECT a FROM ActividadDTO a ORDER BY a.fechaHoraInicio ASC",
+                ActividadDTO.class
+        ).getResultList();
+    }
+
+    // SOLO actividades predeterminadas (las del service)
+    public List<ActividadDTO> obtenerPredeterminadas() {
+        return em.createQuery(
+                "SELECT a FROM ActividadDTO a " +
+                        "WHERE a.predeterminada = true " +
+                        "ORDER BY a.fechaHoraInicio ASC",
+                ActividadDTO.class
+        ).getResultList();
+    }
+
+    // SOLO actividades creadas por usuarios (no predeterminadas)
+    public List<ActividadDTO> obtenerNoPredeterminadas() {
+        return em.createQuery(
+                "SELECT a FROM ActividadDTO a " +
+                        "WHERE a.predeterminada = false " +
+                        "ORDER BY a.fechaHoraInicio ASC",
+                ActividadDTO.class
+        ).getResultList();
     }
 
     public void guardar(ActividadDTO actividad) {
@@ -48,9 +72,18 @@ public class ActividadDAO {
         }
     }
 
-    // Método para comprobar si hay actividades existentes
+    // Cuenta TODAS (si la necesitáis)
     public long contar() {
         return em.createQuery("SELECT COUNT(a) FROM ActividadDTO a", Long.class)
+                .getSingleResult();
+    }
+
+    // >>> NUEVO: cuenta solo las predeterminadas
+    public long contarPredeterminadas() {
+        return em.createQuery(
+                        "SELECT COUNT(a) FROM ActividadDTO a WHERE a.predeterminada = true",
+                        Long.class
+                )
                 .getSingleResult();
     }
 
