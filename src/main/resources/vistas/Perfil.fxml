@@ -88,7 +88,7 @@
                                 <ImageView fitHeight="24.0" fitWidth="24.0"
                                            pickOnBounds="true" preserveRatio="true">
                                     <image>
-                                        <Image url="@../imagenes/calendario.png" />
+                                        <Image url="@../img/calendario.png" />
                                     </image>
                                 </ImageView>
                                 <Label text="Actividades Inscritas">
