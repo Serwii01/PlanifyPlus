@@ -12,7 +12,7 @@ public class ActividadService {
     private ActividadDAO actividadDAO = new ActividadDAO();
 
     public void inicializarActividadesPredeterminadas() {
-        // >>> AHORA mira solo si NO hay actividades predeterminadas
+        // creacion de actividades programadas
         if (actividadDAO.contarPredeterminadas() == 0) {
 
             crearActividadPredeterminada("Partido de fútbol",

@@ -15,8 +15,6 @@
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3307/planifyplus"/>
 
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3307/planifyplus?useSSL=false&amp;serverTimezone=UTC"/>
-
             <property name="jakarta.persistence.jdbc.user" value="root"/>
             <property name="jakarta.persistence.jdbc.password" value="sergio"/>
 
