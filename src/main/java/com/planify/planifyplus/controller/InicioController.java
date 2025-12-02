@@ -182,14 +182,38 @@ public class InicioController {
             btnEliminar.setOnAction(e -> onEliminarActividad(act));
             hBoton.getChildren().add(btnEliminar);
 
-
-             btnInscribir.setVisible(false);
-             btnInscribir.setManaged(false);
+            btnInscribir.setVisible(false);
+            btnInscribir.setManaged(false);
         }
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
 
+        // >>> AQUÍ: al hacer clic en la card, abrir detalle de actividad
+        vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
+
         return vbox;
+    }
+
+    /**
+     * Abre la vista de detalle de actividad (actividad.fxml) y le pasa la ActividadDTO
+     */
+    private void abrirDetalleActividad(ActividadDTO actividad) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/Actividad.fxml"));
+            Parent root = loader.load();
+
+            // Obtener el controller de la vista de detalle
+            ActividadController controller = loader.getController();
+            controller.setActividad(actividad);
+
+            // Cambiar la escena en la misma ventana
+            Stage stage = (Stage) logoImage.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.setScene(scene);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private String capitalize(String str) {
@@ -323,4 +347,3 @@ public class InicioController {
         }
     }
 }
-

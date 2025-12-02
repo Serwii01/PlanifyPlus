@@ -38,11 +38,12 @@ public class ActividadDTO {
     private String ciudad;
 
     // Coordenadas para Leaflet (6 decimales de precisión)
-    @Column(precision = 9, scale = 6, nullable = false)
+    @Column(precision = 9, scale = 6)
     private BigDecimal latitud;
 
-    @Column(precision = 9, scale = 6, nullable = false)
+    @Column(precision = 9, scale = 6)
     private BigDecimal longitud;
+
 
     @Column(nullable = false)
     private Integer aforo;
