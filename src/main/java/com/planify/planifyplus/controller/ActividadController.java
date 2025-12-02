@@ -93,7 +93,6 @@ public class ActividadController {
                 double lng = actividad.getLongitud().doubleValue();
                 String label = actividad.getUbicacion() != null ? actividad.getUbicacion() : "Aquí";
 
-                // Más adelante: webEngine.executeScript("initMap(" + lat + "," + lng + ",'" + label.replace("'", "\\'") + "')");
             }
         });
     }
