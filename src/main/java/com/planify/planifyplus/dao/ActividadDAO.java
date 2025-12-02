@@ -95,6 +95,10 @@ public class ActividadDAO {
         }
     }
 
+    // ============================================================
+    //               MÉTODOS NUEVOS
+    // ============================================================
+
     /**
      * Elimina una actividad por su ID. Solo debe usarse por administradores.
      */

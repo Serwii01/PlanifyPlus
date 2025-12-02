@@ -13,7 +13,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import com.planify.planifyplus.controller.ActividadController;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -32,9 +31,6 @@ public class InicioController {
     @FXML private Label lblAdminBadge;
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
-
-
-
 
     public void initialize() {
         logoImage.setImage(new Image(getClass().getResource("/img/descarga.png").toExternalForm()));
@@ -193,49 +189,23 @@ public class InicioController {
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
 
-        //si se clica en cualquier parte de la tarjeta se ejecuta el metodo de detalle
-        vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
-
         return vbox;
     }
 
-    //metodo para ir a activididad.fxml
-    private void abrirDetalleActividad(ActividadDTO actividad) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/actividad.fxml"));
-            Parent root = loader.load();
-
-            // guarda la actividad sobre la que se clica
-            ActividadController controller = loader.getController();
-            controller.setActividad(actividad);
-
-            // cambiar la escena en la misma ventana y con los estilos
-            Stage stage = (Stage) logoImage.getScene().getWindow();
-            Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.setScene(scene);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    //poner en mayúsculas
     private String capitalize(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
-    //setea colores dependiendo el tipodeactividad
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
                 : tipo.equals("CULTURAL") ? "#e9d5ff"
                 : "#bbf7d0";
     }
 
-    //navegar
+    // ===================== NAVEGACIÓN =====================
+
     @FXML private void handleRegister() { irAVista("registro.fxml"); }
     @FXML private void handleLogin() { irAVista("login.fxml"); }
-    @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
-    @FXML private void handlePerfil() { irAVista("perfil.fxml"); }
 
     @FXML
     private void handleLogout() {
@@ -246,7 +216,8 @@ public class InicioController {
         contenedorUsuario.getChildren().clear();
     }
 
-
+    @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
+    @FXML private void handlePerfil() { irAVista("perfil.fxml"); }
 
     private void irAVista(String fxml) {
         try {
@@ -261,7 +232,8 @@ public class InicioController {
         }
     }
 
-    //cambiar la interfaz si la sesion esta iniciada
+    // ===================== SESIÓN / UI =====================
+
     public void updateUIForSession(boolean loggedIn) {
         btnRegister.setVisible(!loggedIn);
         btnLogin.setVisible(!loggedIn);
@@ -295,6 +267,8 @@ public class InicioController {
         configurarUIRol();
         cargarActividadesComunidad(); // reconstruir cards ya con lógica según usuario
     }
+
+    // ===================== ROL / ADMIN =====================
 
     private void configurarUIRol() {
         boolean esAdmin = Sesion.esAdmin();
