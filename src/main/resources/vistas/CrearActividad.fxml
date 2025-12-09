@@ -4,6 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.web.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -87,68 +88,76 @@
                                        -fx-effect: dropshadow(gaussian, #D0D7E2, 10, 0.35, 0, 4);">
 
                         <center>
-                            <GridPane hgap="24" vgap="16">
+                            <VBox spacing="16">
 
-                                <!-- Título -->
-                                <Label text="Título"
-                                       GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtTitulo"
-                                           promptText="Ej: Partido de fútbol amistoso"
-                                           GridPane.rowIndex="1" GridPane.columnIndex="0"
-                                           GridPane.columnSpan="2"
-                                           style="-fx-pref-width: 500;"/>
+                                <!-- TÍTULO (ocupa toda la fila) -->
+                                <VBox spacing="6">
+                                    <Label text="Título" style="-fx-font-weight: bold;"/>
+                                    <TextField fx:id="txtTitulo"
+                                               promptText="Ej: Partido de fútbol amistoso"
+                                               style="-fx-pref-width: 840;"/>
+                                </VBox>
 
-                                <!-- Categoría -->
-                                <Label text="Categoría"
-                                       GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                <ComboBox fx:id="cmbCategoria"
-                                          promptText="Selecciona categoría"
-                                          GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                                <!-- FILA: CATEGORÍA + CIUDAD + PLAZAS -->
+                                <HBox spacing="20">
+                                    <!-- Categoría -->
+                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                        <Label text="Categoría" style="-fx-font-weight: bold;"/>
+                                        <ComboBox fx:id="cmbCategoria"
+                                                  promptText="Selecciona categoría"
+                                                  maxWidth="Infinity"/>
+                                    </VBox>
 
-                                <!-- Ciudad -->
-                                <Label text="Ciudad"
-                                       GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtCiudad"
-                                           promptText="Sevilla..."
-                                           GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                                    <!-- Ciudad -->
+                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                        <Label text="Ciudad" style="-fx-font-weight: bold;"/>
+                                        <TextField fx:id="txtCiudad"
+                                                   promptText="Sevilla..."/>
+                                    </VBox>
 
-                                <!-- Lugar -->
-                                <Label text="Lugar"
-                                       GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-                                <TextField fx:id="txtLugar"
-                                           promptText="Parque, polideportivo, centro cultural..."
-                                           GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                                    <!-- Plazas máximas -->
+                                    <VBox spacing="6">
+                                        <Label text="Plazas máximas" style="-fx-font-weight: bold;"/>
+                                        <Spinner fx:id="spnPlazas"
+                                                 style="-fx-pref-width: 120;"/>
+                                    </VBox>
+                                </HBox>
 
-                                <!-- Fecha -->
-                                <Label text="Fecha"
-                                       GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                                <DatePicker fx:id="dpFecha"
-                                            GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                                <!-- BUSCADOR DE UBICACIÓN (más espacio vertical) -->
+                                <VBox spacing="6">
+                                    <Label text="Ubicación (busca en el mapa)"
+                                           style="-fx-font-weight: bold;"/>
+                                    <WebView fx:id="webViewBuscador"
+                                             prefHeight="180"
+                                             style="-fx-background-color: transparent;"/>
+                                </VBox>
 
-                                <!-- Hora -->
-                                <Label text="Hora"
-                                       GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-                                <TextField fx:id="txtHora"
-                                           promptText="13:30"
-                                           GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+                                <!-- FILA: FECHA + HORA -->
+                                <HBox spacing="20">
+                                    <!-- Fecha -->
+                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                        <Label text="Fecha" style="-fx-font-weight: bold;"/>
+                                        <DatePicker fx:id="dpFecha"
+                                                    maxWidth="Infinity"/>
+                                    </VBox>
 
-                                <!-- Plazas máximas -->
-                                <Label text="Plazas máximas"
-                                       GridPane.rowIndex="8" GridPane.columnIndex="0"/>
-                                <Spinner fx:id="spnPlazas"
-                                         GridPane.rowIndex="9" GridPane.columnIndex="0"
-                                         style="-fx-pref-width: 120;"/>
+                                    <!-- Hora -->
+                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                        <Label text="Hora" style="-fx-font-weight: bold;"/>
+                                        <TextField fx:id="txtHora"
+                                                   promptText="13:30"/>
+                                    </VBox>
+                                </HBox>
 
-                                <!-- Descripción -->
-                                <Label text="Descripción"
-                                       GridPane.rowIndex="10" GridPane.columnIndex="0"
-                                       GridPane.columnSpan="2"/>
-                                <TextArea fx:id="txtDescripcion"
-                                          promptText="Describe brevemente la actividad..."
-                                          GridPane.rowIndex="11" GridPane.columnIndex="0"
-                                          GridPane.columnSpan="2"
-                                          prefRowCount="4"/>
-                            </GridPane>
+                                <!-- DESCRIPCIÓN (ocupa toda la fila) -->
+                                <VBox spacing="6">
+                                    <Label text="Descripción" style="-fx-font-weight: bold;"/>
+                                    <TextArea fx:id="txtDescripcion"
+                                              promptText="Describe brevemente la actividad..."
+                                              prefRowCount="4"/>
+                                </VBox>
+
+                            </VBox>
                         </center>
 
                         <!-- Botones abajo -->
@@ -162,7 +171,8 @@
                                         onAction="#onCancelar"
                                         style="-fx-background-color: #E5E7EB;
                                                -fx-text-fill: #111827;
-                                               -fx-background-radius: 20;"/>
+                                               -fx-background-radius: 20;
+                                               -fx-padding: 8 20;"/>
 
                                 <Button fx:id="btnGuardar"
                                         text="Crear actividad"

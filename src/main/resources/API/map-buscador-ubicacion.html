@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Ubicación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #F5F8FB;
+            padding: 16px;
+        }
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        #searchInput:focus {
+            border-color: #1563e2;
+            box-shadow: 0 0 0 3px rgba(21, 99, 226, 0.1);
+        }
+        #results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+        .result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item:hover {
+            background: #F5F8FB;
+        }
+        .result-item strong {
+            color: #1563e2;
+        }
+        .result-type {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .no-results, .loading, .error {
+            padding: 16px;
+            text-align: center;
+            color: #6b7280;
+        }
+        .error {
+            color: #dc2626;
+        }
+        .selected-location {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #dbeafe;
+            border-radius: 12px;
+            display: none;
+        }
+        .selected-location.show {
+            display: block;
+        }
+        .selected-location strong {
+            color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+<div class="search-container">
+    <input
+            type="text"
+            id="searchInput"
+            placeholder="🔍 Busca dirección, plaza, parque, estadio..."
+            autocomplete="off"
+    />
+    <div id="results"></div>
+    <div id="selectedLocation" class="selected-location">
+        <strong>📍 Ubicación seleccionada:</strong>
+        <div id="locationText"></div>
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const resultsDiv = document.getElementById('results');
+    const selectedLocationDiv = document.getElementById('selectedLocation');
+    const locationTextDiv = document.getElementById('locationText');
+    let searchTimeout;
+    let lastSearchTime = 0;
+    let cityContext = '';
+
+    // Coordenadas de España (para validación)
+    const SPAIN_BOUNDS = {
+        minLat: 36.0,    // Sur (Tarifa)
+        maxLat: 43.8,    // Norte (Galicia)
+        minLon: -9.3,    // Oeste (Galicia)
+        maxLon: 4.3      // Este (Cataluña, Baleares)
+    };
+
+    window.setCityContext = function(city) {
+        cityContext = city;
+        console.log('Ciudad configurada:', cityContext);
+    };
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+
+        clearTimeout(searchTimeout);
+
+        if (query.length < 3) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<div class="loading">🔍 Buscando...</div>';
+        resultsDiv.style.display = 'block';
+
+        searchTimeout = setTimeout(() => {
+            const now = Date.now();
+            if (now - lastSearchTime < 1000) {
+                setTimeout(() => searchLocation(query), 1000 - (now - lastSearchTime));
+            } else {
+                searchLocation(query);
+            }
+        }, 800);
+    });
+
+    function searchLocation(query) {
+        lastSearchTime = Date.now();
+
+        let searchQuery = query;
+        if (cityContext && !query.toLowerCase().includes(cityContext.toLowerCase())) {
+            searchQuery = `${query}, ${cityContext}, España`;
+        } else if (!query.toLowerCase().includes('españa') && !query.toLowerCase().includes('spain')) {
+            searchQuery = `${query}, España`;
+        }
+
+        // Añadir bounded y viewbox para limitar a España
+        const url = `https://nominatim.openstreetmap.org/search?` +
+                   `format=json` +
+                   `&q=${encodeURIComponent(searchQuery)}` +
+                   `&limit=15` +
+                   `&addressdetails=1` +
+                   `&extratags=1` +
+                   `&countrycodes=es` +
+                   `&bounded=1` +  // Solo resultados dentro del viewbox
+                   `&viewbox=-9.3,43.8,4.3,36.0`;  // Bbox de España (oeste,norte,este,sur)
+
+        console.log('Buscando:', searchQuery);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'PlanifyPlus-JavaFX-App/1.0'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Resultados recibidos (sin filtrar):', data.length);
+
+            // FILTRAR resultados que estén fuera de España
+            const filteredData = data.filter(result => {
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+
+                const isInSpain = lat >= SPAIN_BOUNDS.minLat &&
+                                 lat <= SPAIN_BOUNDS.maxLat &&
+                                 lon >= SPAIN_BOUNDS.minLon &&
+                                 lon <= SPAIN_BOUNDS.maxLon;
+
+                if (!isInSpain) {
+                    console.log('❌ Descartado (fuera de España):', result.display_name, lat, lon);
+                }
+
+                return isInSpain;
+            });
+
+            console.log('Resultados válidos (en España):', filteredData.length);
+            displayResults(filteredData, query);
+        })
+        .catch(error => {
+            console.error('Error al buscar:', error);
+            resultsDiv.innerHTML = '<div class="error">⚠️ Error al buscar. Intenta de nuevo.</div>';
+            resultsDiv.style.display = 'block';
+        });
+    }
+
+    function displayResults(results, query) {
+        resultsDiv.innerHTML = '';
+
+        if (results.length === 0) {
+            resultsDiv.innerHTML = '<div class="no-results">❌ No se encontraron resultados en España. Prueba con más detalles.</div>';
+            resultsDiv.style.display = 'block';
+            return;
+        }
+
+        // Ordenar por relevancia y proximidad
+        results.sort((a, b) => {
+            const typeOrder = {
+                'stadium': 1, 'sports_centre': 1, 'park': 2, 'pitch': 2,
+                'leisure': 3, 'amenity': 4, 'building': 5, 'place': 6
+            };
+
+            const aOrder = typeOrder[a.type] || 10;
+            const bOrder = typeOrder[b.type] || 10;
+
+            // Si tienen el mismo tipo, priorizar por importancia
+            if (aOrder === bOrder) {
+                const aImportance = parseFloat(a.importance) || 0;
+                const bImportance = parseFloat(b.importance) || 0;
+                return bImportance - aImportance;
+            }
+
+            return aOrder - bOrder;
+        });
+
+        const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+
+        results.forEach(result => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+
+            const highlightedName = result.display_name.replace(regex, '<strong>$1</strong>');
+            const placeType = getPlaceType(result);
+
+            div.innerHTML = `${highlightedName}<div class="result-type">${placeType}</div>`;
+            div.addEventListener('click', () => selectLocation(result));
+            resultsDiv.appendChild(div);
+        });
+
+        resultsDiv.style.display = 'block';
+    }
+
+    function getPlaceType(result) {
+        const types = {
+            'stadium': '🏟️ Estadio',
+            'park': '🌳 Parque',
+            'pitch': '⚽ Campo deportivo',
+            'sports_centre': '🏋️ Centro deportivo',
+            'building': '🏢 Edificio',
+            'place': '📍 Lugar',
+            'leisure': '🎭 Ocio',
+            'amenity': '🏛️ Instalación',
+            'road': '🛣️ Calle',
+            'house_number': '🏠 Dirección'
+        };
+        return types[result.type] || '📍 Ubicación';
+    }
+
+    function selectLocation(location) {
+        const lat = parseFloat(location.lat);
+        const lon = parseFloat(location.lon);
+        const displayName = location.display_name;
+
+        // Validación final antes de enviar a Java
+        const isInSpain = lat >= SPAIN_BOUNDS.minLat &&
+                         lat <= SPAIN_BOUNDS.maxLat &&
+                         lon >= SPAIN_BOUNDS.minLon &&
+                         lon <= SPAIN_BOUNDS.maxLon;
+
+        if (!isInSpain) {
+            console.error('❌ Ubicación fuera de España:', lat, lon);
+            alert('⚠️ La ubicación seleccionada no está en España. Por favor, selecciona otra.');
+            return;
+        }
+
+        console.log('✅ Ubicación seleccionada (validada):', {displayName, lat, lon: lon, type: location.type});
+
+        locationTextDiv.textContent = displayName;
+        selectedLocationDiv.classList.add('show');
+
+        resultsDiv.style.display = 'none';
+        searchInput.value = displayName;
+
+        if (typeof javaApp !== 'undefined' && javaApp !== null) {
+            try {
+                javaApp.onLocationSelected(displayName, lat, lon);
+                console.log('✅ Datos enviados a Java: ' + displayName);
+            } catch (error) {
+                console.error('❌ Error al enviar datos a Java:', error);
+            }
+        } else {
+            console.error('❌ javaApp no está disponible');
+        }
+    }
+
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.search-container')) {
+            resultsDiv.style.display = 'none';
+        }
+    });
+
+    console.log('Buscador de ubicación inicializado con validación geográfica');
+</script>
+</body>
+</html>
