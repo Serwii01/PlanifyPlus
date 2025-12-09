@@ -20,9 +20,7 @@ public class PlanifyApp extends Application {
         Parent root = loader.load();
         Scene scene = new Scene(root);
 
-        // <<< Aquí añades tu CSS de fuente >>>
         scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-        // <<< ------------------------------ >>>
 
         primaryStage.setTitle("PlanifyPlus - Inicio");
         primaryStage.setScene(scene);
