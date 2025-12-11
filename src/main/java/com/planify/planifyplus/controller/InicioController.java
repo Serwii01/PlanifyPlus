@@ -46,6 +46,8 @@ public class InicioController {
     // CARGA DE ACTIVIDADES
     // ============================================================
 
+
+    //metodo que coloca las actividades en el contenedor de la izquierda
     private void cargarActividadesComunidad() {
         contenedorComunidad.getChildren().clear();
         Long idUsuarioActual = null;
@@ -267,10 +269,7 @@ public class InicioController {
         alert.showAndWait();
     }
 
-    // ============================================================
-    // OTROS MÉTODOS
-    // ============================================================
-
+    //abrir la vista de la actividad en detalle
     private void abrirDetalleActividad(ActividadDTO actividad) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/Actividad.fxml"));
@@ -286,20 +285,25 @@ public class InicioController {
         }
     }
 
+    //metodo para poner en mayusculas
     private String capitalize(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
+    //setear color segun tipo de actividad
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
                 : tipo.equals("CULTURAL") ? "#e9d5ff"
                 : "#bbf7d0";
     }
 
-    // ===================== NAVEGACIÓN =====================
+    // navegacion
     @FXML private void handleRegister() { irAVista("registro.fxml"); }
     @FXML private void handleLogin() { irAVista("login.fxml"); }
+    @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
+    @FXML private void handlePerfil() { irAVista("perfil.fxml"); }
 
+    //metodo para cerrar sesion
     @FXML
     private void handleLogout() {
         Sesion.cerrarSesion();
@@ -309,9 +313,7 @@ public class InicioController {
         contenedorUsuario.getChildren().clear();
     }
 
-    @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
-    @FXML private void handlePerfil() { irAVista("perfil.fxml"); }
-
+    //metodo para cambiar de vista
     private void irAVista(String fxml) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/" + fxml));
@@ -325,8 +327,9 @@ public class InicioController {
         }
     }
 
-    // ===================== SESIÓN / UI =====================
+    //cuando hay sesion activa cambia la interfaz
     public void updateUIForSession(boolean loggedIn) {
+        //cambia valores de la vista
         btnRegister.setVisible(!loggedIn);
         btnLogin.setVisible(!loggedIn);
         btnPerfil.setVisible(loggedIn);
@@ -340,6 +343,7 @@ public class InicioController {
         scrollActividadesUsuario.setVisible(loggedIn);
         lblNoSesion.setVisible(!loggedIn);
 
+        //para poner el nombre y la ciudad del usuario
         if (loggedIn && Sesion.getUsuarioActual() != null) {
             lblUser.setText(Sesion.getUsuarioActual().getNombre().substring(0, 1));
             lblCiudad.setText(Sesion.getUsuarioActual().getCiudad());
@@ -350,15 +354,16 @@ public class InicioController {
             contenedorUsuario.getChildren().clear();
         }
     }
-
+    //cuando el usuario se logea la interfaz cambia
     public void onUsuarioLogueado() {
         updateUIForSession(true);
         configurarUIRol();
         cargarActividadesComunidad();
     }
 
-    // ===================== ROL / ADMIN =====================
+    // Cambiar la interfaz segun el rol
     private void configurarUIRol() {
+        //si es adminstrador pone el icono
         boolean esAdmin = Sesion.esAdmin();
         if (lblAdminBadge != null) {
             lblAdminBadge.setVisible(esAdmin);
@@ -380,12 +385,14 @@ public class InicioController {
         }
     }
 
-    // ===================== ELIMINAR ACTIVIDAD (ADMIN) =====================
+    //eliminar actividad siendo administrador
     private void onEliminarActividad(ActividadDTO act) {
+        //comprueba si es administrador primero
         if (!Sesion.esAdmin()) {
             return;
         }
 
+        //crea una alerta de confirmación de eliminación
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Eliminar actividad");
         alert.setHeaderText("¿Eliminar actividad?");
@@ -393,14 +400,20 @@ public class InicioController {
                 "Esta acción no se puede deshacer.\n\n" +
                         "La actividad \"" + act.getTitulo() + "\" será eliminada."
         );
+        //crea dos botones, para confirmar o eliminar
         ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
+        //le setea los botones a la alerta
         alert.getButtonTypes().setAll(btnCancelar, btnEliminar);
 
         ButtonType resultado = alert.showAndWait().orElse(btnCancelar);
+        //si se elimina la actividad
         if (resultado == btnEliminar) {
+            //llama al metodo eliminar por id (actividad DAO)
             actividadDAO.eliminarPorId(act.getId());
+            //despues vuelve a cargar las actividades de la comunidad
             cargarActividadesComunidad();
+            //y carga tambien las de los usuarios
             if (Sesion.getUsuarioActual() != null) {
                 cargarActividadesUsuario();
             }
