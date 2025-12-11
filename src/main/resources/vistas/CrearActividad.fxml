@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.web.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/25"
-            xmlns:fx="http://javafx.com/fxml/1"
+<BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.planify.planifyplus.controller.CrearActividadController"
             style="-fx-background-color: #F5F8FB;">
 
@@ -16,178 +12,146 @@
         <HBox spacing="18" alignment="CENTER_LEFT"
               style="-fx-padding: 22; -fx-background-color: #F2F4F8;">
 
-            <!-- Botón Inicio -->
-            <Button fx:id="btnHome"
-                    text="🏠"
-                    onAction="#onIrInicio"
-                    style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"/>
+            <Button text="← Volver"
+                    onAction="#handleVolver"
+                    style="-fx-background-color: #E5E7EB;
+                           -fx-text-fill: #222;
+                           -fx-background-radius: 15;
+                           -fx-font-size: 15;"/>
 
-            <!-- Logo + nombre app -->
-            <HBox alignment="CENTER_LEFT" spacing="12">
-                <ImageView fx:id="logoImage"
-                           fitHeight="34" fitWidth="34"
-                           preserveRatio="true" pickOnBounds="true"/>
-                <Label text="PlanifyPlus"
-                       style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
-            </HBox>
+            <Label text="PlanifyPlus"
+                   style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
 
             <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Info usuario (ya está logueado) -->
-            <Label fx:id="lblCiudad" text="Ciudad"
-                   style="-fx-background-color: #e7eaf3;
-                          -fx-padding: 4 18 4 18;
-                          -fx-background-radius: 16;
-                          -fx-font-size: 15;
-                          -fx-font-weight: bold;"/>
-
-            <Label fx:id="lblUser" text="U"
-                   style="-fx-background-color: #1563e2;
-                          -fx-text-fill: white;
-                          -fx-padding: 6 18 6 18;
-                          -fx-background-radius: 16;
-                          -fx-font-size: 15;
-                          -fx-font-weight: bold;"/>
-
-            <Button fx:id="btnPerfil"
-                    text="Mi Perfil"
-                    onAction="#onIrPerfil"
-                    style="-fx-background-color: #E5E7EB;
-                           -fx-text-fill: #222;
-                           -fx-background-radius: 15;
-                           -fx-font-size: 15;"/>
-
-            <Button fx:id="btnLogout"
-                    text="Cerrar sesión"
-                    onAction="#onLogout"
-                    style="-fx-background-color: #E5E7EB;
-                           -fx-text-fill: #222;
-                           -fx-background-radius: 15;
-                           -fx-font-size: 15;"/>
         </HBox>
     </top>
 
-    <!-- CONTENIDO CENTRAL: FORMULARIO CREAR ACTIVIDAD -->
+    <!-- FORMULARIO -->
     <center>
-        <StackPane>
-            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
-                <VBox alignment="TOP_CENTER"
-                      spacing="24"
-                      style="-fx-padding: 36 0 36 0;">
+        <ScrollPane fitToWidth="true"
+                    style="-fx-background-color: transparent;">
+            <VBox alignment="TOP_CENTER" spacing="0"
+                  style="-fx-padding: 40 20 40 20;">
 
-                    <Label text="Crear nueva actividad"
-                           style="-fx-font-size: 22;
-                                  -fx-text-fill: #1563e2;
-                                  -fx-font-weight: bold;"/>
+                <VBox maxWidth="700" spacing="24"
+                      style="-fx-background-color: white;
+                             -fx-padding: 40 36 40 36;
+                             -fx-background-radius: 18;
+                             -fx-border-color: #E5E7EB;
+                             -fx-border-width: 1.5;">
 
-                    <!-- Tarjeta blanca con formulario -->
-                    <BorderPane maxWidth="900"
-                                style="-fx-background-color: white;
-                                       -fx-background-radius: 18;
-                                       -fx-padding: 28;
-                                       -fx-effect: dropshadow(gaussian, #D0D7E2, 10, 0.35, 0, 4);">
+                    <!-- Título -->
+                    <VBox spacing="8">
+                        <Label fx:id="lblTituloPagina" text="Crear Nueva Actividad"
+                               style="-fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: #1F2937;"/>
+                        <Label text="Organiza un evento para tu comunidad"
+                               style="-fx-font-size: 15; -fx-text-fill: #6B7280;"/>
+                    </VBox>
 
-                        <center>
-                            <VBox spacing="16">
+                    <!-- Campo: Título -->
+                    <VBox spacing="8">
+                        <Label text="Título de la actividad *"
+                               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        <TextField fx:id="txtTitulo"
+                                   promptText="ej. Clase de Yoga al Aire Libre"
+                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                    </VBox>
 
-                                <!-- TÍTULO (ocupa toda la fila) -->
-                                <VBox spacing="6">
-                                    <Label text="Título" style="-fx-font-weight: bold;"/>
-                                    <TextField fx:id="txtTitulo"
-                                               promptText="Ej: Partido de fútbol amistoso"
-                                               style="-fx-pref-width: 840;"/>
-                                </VBox>
+                    <!-- Campo: Descripción -->
+                    <VBox spacing="8">
+                        <Label text="Descripción *"
+                               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        <TextArea fx:id="txtDescripcion"
+                                  promptText="Describe tu actividad, qué incluye, qué deben llevar los participantes..."
+                                  wrapText="true"
+                                  prefRowCount="4"
+                                  style="-fx-font-size: 14; -fx-padding: 10 14;"/>
+                    </VBox>
 
-                                <!-- FILA: CATEGORÍA + CIUDAD + PLAZAS -->
-                                <HBox spacing="20">
-                                    <!-- Categoría -->
-                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                        <Label text="Categoría" style="-fx-font-weight: bold;"/>
-                                        <ComboBox fx:id="cmbCategoria"
-                                                  promptText="Selecciona categoría"
-                                                  maxWidth="Infinity"/>
-                                    </VBox>
+                    <!-- Fecha y Hora -->
+                    <HBox spacing="16">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Fecha *"
+                                   style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                            <DatePicker fx:id="dpFecha"
+                                        promptText="Selecciona una fecha"
+                                        prefWidth="300"/>
+                        </VBox>
 
-                                    <!-- Ciudad -->
-                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                        <Label text="Ciudad" style="-fx-font-weight: bold;"/>
-                                        <TextField fx:id="txtCiudad"
-                                                   promptText="Sevilla..."/>
-                                    </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Hora (HH:mm) *"
+                                   style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                            <TextField fx:id="txtHora"
+                                       promptText="ej. 18:30"
+                                       style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                        </VBox>
+                    </HBox>
 
-                                    <!-- Plazas máximas -->
-                                    <VBox spacing="6">
-                                        <Label text="Plazas máximas" style="-fx-font-weight: bold;"/>
-                                        <Spinner fx:id="spnPlazas"
-                                                 style="-fx-pref-width: 120;"/>
-                                    </VBox>
-                                </HBox>
+                    <!-- Tipo -->
+                    <VBox spacing="8">
+                        <Label text="Tipo de actividad *"
+                               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        <ComboBox fx:id="cmbTipo"
+                                  promptText="Selecciona un tipo"
+                                  prefWidth="300"/>
+                    </VBox>
 
-                                <!-- BUSCADOR DE UBICACIÓN (más espacio vertical) -->
-                                <VBox spacing="6">
-                                    <Label text="Ubicación (busca en el mapa)"
-                                           style="-fx-font-weight: bold;"/>
-                                    <WebView fx:id="webViewBuscador"
-                                             prefHeight="180"
-                                             style="-fx-background-color: transparent;"/>
-                                </VBox>
+                    <!-- Ubicación -->
+                    <VBox spacing="8">
+                        <Label text="Ubicación *"
+                               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        <TextField fx:id="txtUbicacion"
+                                   promptText="ej. Parque Central, Calle Principal 123"
+                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                        <Label text="📍 Ingresa la dirección o nombre del lugar"
+                               style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
+                    </VBox>
 
-                                <!-- FILA: FECHA + HORA -->
-                                <HBox spacing="20">
-                                    <!-- Fecha -->
-                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                        <Label text="Fecha" style="-fx-font-weight: bold;"/>
-                                        <DatePicker fx:id="dpFecha"
-                                                    maxWidth="Infinity"/>
-                                    </VBox>
+                    <!-- Ciudad -->
+                    <VBox spacing="8">
+                        <Label text="Ciudad *"
+                               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        <TextField fx:id="txtCiudad"
+                                   promptText="ej. Sevilla"
+                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                    </VBox>
 
-                                    <!-- Hora -->
-                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                        <Label text="Hora" style="-fx-font-weight: bold;"/>
-                                        <TextField fx:id="txtHora"
-                                                   promptText="13:30"/>
-                                    </VBox>
-                                </HBox>
+                    <!-- Aforo -->
+                    <VBox spacing="8">
+                        <Label text="Aforo máximo *"
+                               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        <TextField fx:id="txtAforo"
+                                   promptText="ej. 20"
+                                   prefWidth="150"
+                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                        <Label text="Número de personas que pueden inscribirse"
+                               style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
+                    </VBox>
 
-                                <!-- DESCRIPCIÓN (ocupa toda la fila) -->
-                                <VBox spacing="6">
-                                    <Label text="Descripción" style="-fx-font-weight: bold;"/>
-                                    <TextArea fx:id="txtDescripcion"
-                                              promptText="Describe brevemente la actividad..."
-                                              prefRowCount="4"/>
-                                </VBox>
+                    <!-- Botones -->
+                    <HBox spacing="12" alignment="CENTER" style="-fx-padding: 16 0 0 0;">
+                        <Button text="Cancelar"
+                                onAction="#handleVolver"
+                                style="-fx-background-color: #E5E7EB;
+                                       -fx-text-fill: #222;
+                                       -fx-background-radius: 22;
+                                       -fx-font-size: 16;
+                                       -fx-padding: 10 32 10 32;"
+                                HBox.hgrow="ALWAYS"/>
 
-                            </VBox>
-                        </center>
+                        <Button fx:id="btnGuardar"
+                                text="Crear Actividad"
+                                onAction="#handleGuardarActividad"
+                                style="-fx-background-color: #1563e2;
+                                       -fx-text-fill: white;
+                                       -fx-background-radius: 22;
+                                       -fx-font-size: 16;
+                                       -fx-padding: 10 32 10 32;"
+                                HBox.hgrow="ALWAYS"/>
+                    </HBox>
 
-                        <!-- Botones abajo -->
-                        <bottom>
-                            <HBox spacing="12" alignment="CENTER_RIGHT"
-                                  style="-fx-padding: 22 0 0 0;">
-                                <Region HBox.hgrow="ALWAYS"/>
-
-                                <Button fx:id="btnCancelar"
-                                        text="Cancelar"
-                                        onAction="#onCancelar"
-                                        style="-fx-background-color: #E5E7EB;
-                                               -fx-text-fill: #111827;
-                                               -fx-background-radius: 20;
-                                               -fx-padding: 8 20;"/>
-
-                                <Button fx:id="btnGuardar"
-                                        text="Crear actividad"
-                                        onAction="#onGuardarActividad"
-                                        style="-fx-background-color: #1563e2;
-                                               -fx-text-fill: white;
-                                               -fx-background-radius: 22;
-                                               -fx-padding: 8 26;
-                                               -fx-effect: dropshadow(gaussian, #1563e2, 3, 0.4, 0, 2);"/>
-                            </HBox>
-                        </bottom>
-
-                    </BorderPane>
                 </VBox>
-            </ScrollPane>
-        </StackPane>
+            </VBox>
+        </ScrollPane>
     </center>
 </BorderPane>
