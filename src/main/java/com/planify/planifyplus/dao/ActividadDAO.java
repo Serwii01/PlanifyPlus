@@ -132,7 +132,46 @@ public class ActividadDAO {
                 .setParameter("idUsuario", idUsuario)
                 .getResultList();
     }
+
+    // ================== NUEVO: DENUNCIAS ==================
+
+    /**
+     * Incremento en 1 el número de denuncias de una actividad.
+     * Lo usaré cuando un usuario pulse "Denunciar actividad".
+     */
+    public void incrementarDenuncias(Long idActividad) {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            ActividadDTO act = em.find(ActividadDTO.class, idActividad);
+            if (act != null) {
+                int actuales = act.getNumDenuncias();
+                act.setNumDenuncias(actuales + 1);
+                em.merge(act);
+            }
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Devuelve solo las actividades que tienen al menos 1 denuncia,
+     * ordenadas de mayor a menor número de denuncias.
+     * Esto lo usaré para rellenar "Actividades denunciadas" en la vista del admin.
+     */
+    public List<ActividadDTO> obtenerDenunciadasOrdenadas() {
+        return em.createQuery(
+                        "SELECT a FROM ActividadDTO a " +
+                                "WHERE a.numDenuncias > 0 " +
+                                "ORDER BY a.numDenuncias DESC, a.fechaHoraInicio ASC",
+                        ActividadDTO.class
+                )
+                .getResultList();
+    }
 }
+
 
 
 

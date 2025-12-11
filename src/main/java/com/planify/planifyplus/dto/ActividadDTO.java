@@ -44,7 +44,6 @@ public class ActividadDTO {
     @Column(precision = 9, scale = 6)
     private BigDecimal longitud;
 
-
     @Column(nullable = false)
     private Integer aforo;
 
@@ -64,4 +63,14 @@ public class ActividadDTO {
     @ManyToOne
     @JoinColumn(name = "creado_por_id", nullable = true)
     private UsuarioDTO creador;
+
+    // ================= NUEVO: CONTADOR DE DENUNCIAS =================
+
+    /**
+     * Número de veces que esta actividad ha sido denunciada.
+     * Lo inicio a 0 para que todas las actividades nuevas empiecen sin denuncias.
+     * Con hbm2ddl=update, Hibernate añadirá la columna num_denuncias si no existe.
+     */
+    @Column(name = "num_denuncias", nullable = false)
+    private int numDenuncias = 0;
 }
