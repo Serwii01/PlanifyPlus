@@ -1,7 +1,9 @@
 package com.planify.planifyplus.util;
 
 import com.planify.planifyplus.dto.UsuarioDTO;
+import lombok.Data;
 
+@Data
 public class Sesion {
 
     // Usuario que está actualmente logueado

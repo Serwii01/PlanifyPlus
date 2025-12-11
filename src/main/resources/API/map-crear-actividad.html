@@ -4,206 +4,86 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Actividad</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-        }
-        #map {
-            height: 100vh;
-            width: 100%;
-            background-color: #f0f0f0;
-        }
-
-        /* Estilo personalizado para el popup */
-        .custom-popup .leaflet-popup-content-wrapper {
-            background-color: #1563e2;
-            color: white;
-            border-radius: 12px;
-            padding: 8px;
-        }
-
-        .custom-popup .leaflet-popup-content {
-            margin: 10px 14px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .custom-popup .leaflet-popup-tip {
-            background-color: #1563e2;
-        }
-
-        .custom-popup a.leaflet-popup-close-button {
-            color: white;
-            font-size: 18px;
-        }
-
-        /* Marcador personalizado */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { margin:0; padding:0; overflow:hidden; }
+        #map { height:100vh; width:100%; background:#f3f4f6; }
         .custom-marker {
-            background-color: #1563e2;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            background-color:#1563e2;
+            width:30px; height:30px;
+            border-radius:50%;
+            border:3px solid #fff;
+            box-shadow:0 2px 8px rgba(0,0,0,.3);
         }
-
-        /* Loading indicator */
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px;
-            color: #666;
-            z-index: 1000;
+        .custom-popup .leaflet-popup-content-wrapper {
+            background:#1563e2;
+            color:#fff;
+            border-radius:12px;
         }
+        .custom-popup .leaflet-popup-tip { background:#1563e2; }
     </style>
 </head>
 <body>
-<div id="loading">Cargando mapa...</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    console.log('🗺️ Iniciando carga de Leaflet...');
+    console.log('Iniciando mapa Leaflet');
+    var map;
+    var marker;
 
-    var map = null;
-    var marker = null;
-    var mapInitialized = false;
-
-    // Función para inicializar el mapa
     function initMap() {
-        try {
-            console.log('Inicializando mapa...');
+        map = L.map('map', {
+            center:[40.4168, -3.7038],
+            zoom:6
+        });
 
-            // Inicializar mapa centrado en España por defecto
-            map = L.map('map', {
-                center: [40.4168, -3.7038],
-                zoom: 6,
-                zoomControl: true,
-                attributionControl: true
-            });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:'© OpenStreetMap contributors',
+            maxZoom:19
+        }).addTo(map);
 
-            // Capa de tiles de OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19,
-                minZoom: 3
-            }).addTo(map);
+        // Fix para WebView
+        setTimeout(function () {
+            map.invalidateSize();
+        }, 300);
 
-            mapInitialized = true;
-
-            // Ocultar el loading
-            var loadingDiv = document.getElementById('loading');
-            if (loadingDiv) {
-                loadingDiv.style.display = 'none';
-            }
-
-            console.log('✅ Mapa inicializado correctamente');
-
-            // Forzar actualización del tamaño
-            setTimeout(function() {
-                map.invalidateSize();
-                console.log('Tamaño del mapa actualizado');
-            }, 250);
-
-        } catch (error) {
-            console.error('❌ Error al inicializar mapa:', error);
-        }
+        console.log('Mapa inicializado');
     }
 
-    /**
-     * Función para actualizar la ubicación del mapa
-     * Esta función será llamada desde Java cuando se cargue una actividad
-     */
     function updateMapLocation(lat, lng, label) {
-        console.log('📍 updateMapLocation llamada:', lat, lng, label);
+        if (!map) return;
+        console.log('updateMapLocation:', lat, lng, label);
 
-        // Si el mapa no está inicializado, inicializarlo primero
-        if (!mapInitialized) {
-            console.log('Mapa no inicializado, inicializando...');
-            initMap();
-
-            // Esperar a que el mapa se inicialice
-            setTimeout(function() {
-                updateMapLocation(lat, lng, label);
-            }, 500);
-            return;
+        if (marker) {
+            map.removeLayer(marker);
         }
 
-        try {
-            // Validar coordenadas
-            if (isNaN(lat) || isNaN(lng)) {
-                console.error('❌ Coordenadas inválidas:', lat, lng);
-                return;
-            }
+        var icon = L.divIcon({
+            className:'custom-marker',
+            iconSize:[30,30],
+            iconAnchor:[15,15],
+            popupAnchor:[0,-15]
+        });
 
-            // Remover marcador anterior si existe
-            if (marker) {
-                map.removeLayer(marker);
-                console.log('Marcador anterior eliminado');
-            }
+        marker = L.marker([lat, lng], {icon:icon}).addTo(map);
+        marker.bindPopup('<b>' + label + '</b>', {
+            className:'custom-popup',
+            maxWidth:280
+        }).openPopup();
 
-            // Crear icono personalizado
-            var customIcon = L.divIcon({
-                className: 'custom-marker',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
-            });
-
-            // Crear nuevo marcador con icono personalizado
-            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-
-            // Crear popup con estilo personalizado
-            var popupContent = '<div style="text-align: center;"><b>📍 ' + label + '</b></div>';
-            marker.bindPopup(popupContent, {
-                className: 'custom-popup',
-                maxWidth: 300
-            }).openPopup();
-
-            // Centrar el mapa en la ubicación con animación
-            map.flyTo([lat, lng], 15, {
-                duration: 1.5,
-                easeLinearity: 0.5
-            });
-
-            console.log('✅ Mapa actualizado correctamente a:', lat, lng);
-
-        } catch (error) {
-            console.error('❌ Error al actualizar mapa:', error);
-        }
+        map.setView([lat, lng], 15);
     }
 
-    // Inicializar el mapa cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM cargado, inicializando mapa...');
-        setTimeout(initMap, 100);
+    document.addEventListener('DOMContentLoaded', function () {
+        initMap();
     });
 
-    // Backup: inicializar después de un delay si DOMContentLoaded no se dispara
-    setTimeout(function() {
-        if (!mapInitialized) {
-            console.log('Inicializando mapa por timeout...');
-            initMap();
-        }
-    }, 500);
-
-    // Manejar redimensionamiento
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         if (map) {
-            setTimeout(function() {
-                map.invalidateSize();
-            }, 100);
+            setTimeout(function () { map.invalidateSize(); }, 100);
         }
     });
 </script>
