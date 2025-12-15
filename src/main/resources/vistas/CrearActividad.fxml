@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.web.WebView?>
 <?import javafx.geometry.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
@@ -96,15 +97,34 @@
                                   prefWidth="300"/>
                     </VBox>
 
-                    <!-- Ubicación -->
+                    <!-- BUSCADOR DE UBICACIÓN CON WEBVIEW -->
                     <VBox spacing="8">
                         <Label text="Ubicación *"
                                style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                        <TextField fx:id="txtUbicacion"
-                                   promptText="ej. Parque Central, Calle Principal 123"
-                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
-                        <Label text="📍 Ingresa la dirección o nombre del lugar"
+                        <Label text="📍 Busca y selecciona la ubicación exacta del evento"
                                style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
+
+                        <!-- WebView para el buscador -->
+                        <WebView fx:id="webViewBuscador"
+                                 prefHeight="120"
+                                 minHeight="120"
+                                 maxHeight="120"
+                                 style="-fx-background-color: transparent;"/>
+
+                        <!-- Campo para mostrar la ubicación seleccionada -->
+                        <VBox spacing="6" style="-fx-padding: 8 0 0 0;">
+                            <Label text="✓ Ubicación seleccionada:"
+                                   style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
+                            <TextField fx:id="txtUbicacion"
+                                       editable="false"
+                                       promptText="Ninguna ubicación seleccionada aún"
+                                       style="-fx-font-size: 14; -fx-padding: 8 12;
+                                              -fx-background-color: #E5F2FF;
+                                              -fx-border-color: #1563e2;
+                                              -fx-border-width: 1;
+                                              -fx-border-radius: 8;
+                                              -fx-background-radius: 8;"/>
+                        </VBox>
                     </VBox>
 
                     <!-- Ciudad -->
@@ -114,6 +134,8 @@
                         <TextField fx:id="txtCiudad"
                                    promptText="ej. Sevilla"
                                    style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                        <Label text="💡 Escribe la ciudad para mejorar las búsquedas de ubicación"
+                               style="-fx-font-size: 12; -fx-text-fill: #6B7280;"/>
                     </VBox>
 
                     <!-- Aforo -->
@@ -127,6 +149,10 @@
                         <Label text="Número de personas que pueden inscribirse"
                                style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
                     </VBox>
+
+                    <!-- Campos ocultos para coordenadas -->
+                    <TextField fx:id="txtLatitud" visible="false" managed="false"/>
+                    <TextField fx:id="txtLongitud" visible="false" managed="false"/>
 
                     <!-- Botones -->
                     <HBox spacing="12" alignment="CENTER" style="-fx-padding: 16 0 0 0;">
