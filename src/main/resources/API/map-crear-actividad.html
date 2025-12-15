@@ -6,206 +6,119 @@
     <title>Mapa Actividad</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-        }
-        #map {
-            height: 100vh;
-            width: 100%;
-            background-color: #f0f0f0;
-        }
+        /* CRÍTICO: Asegurar que el div del mapa ocupe el 100% del contenedor */
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+        #map { height: 100%; width: 100%; background: #e5e7eb; }
 
-        /* Estilo personalizado para el popup */
-        .custom-popup .leaflet-popup-content-wrapper {
-            background-color: #1563e2;
-            color: white;
-            border-radius: 12px;
-            padding: 8px;
-        }
-
-        .custom-popup .leaflet-popup-content {
-            margin: 10px 14px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .custom-popup .leaflet-popup-tip {
-            background-color: #1563e2;
-        }
-
-        .custom-popup a.leaflet-popup-close-button {
-            color: white;
-            font-size: 18px;
-        }
-
-        /* Marcador personalizado */
+        /* Estilos del marcador (por estética) */
         .custom-marker {
             background-color: #1563e2;
-            width: 30px;
-            height: 30px;
+            width: 30px; height: 30px;
             border-radius: 50%;
-            border: 3px solid white;
+            border: 3px solid #fff;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-
-        /* Loading indicator */
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px;
-            color: #666;
-            z-index: 1000;
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: #1563e2;
+            color: #fff;
+            border-radius: 8px;
+            font-family: sans-serif;
+            font-size: 14px;
         }
+        .custom-popup .leaflet-popup-tip { background: #1563e2; }
+        .custom-popup a { color: white; }
     </style>
 </head>
 <body>
-<div id="loading">Cargando mapa...</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    console.log('🗺️ Iniciando carga de Leaflet...');
-
-    var map = null;
-    var marker = null;
+    var map;
+    var marker;
     var mapInitialized = false;
 
-    // Función para inicializar el mapa
-    function initMap() {
-        try {
-            console.log('Inicializando mapa...');
+    function initializeLeafletMap() {
+        if (mapInitialized) return;
 
-            // Inicializar mapa centrado en España por defecto
-            map = L.map('map', {
-                center: [40.4168, -3.7038],
-                zoom: 6,
-                zoomControl: true,
-                attributionControl: true
-            });
+        map = L.map('map', {
+            center: [40.4168, -3.7038], // Centro de España por defecto
+            zoom: 5,
+            zoomControl: true
+        });
 
-            // Capa de tiles de OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19,
-                minZoom: 3
-            }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
 
-            mapInitialized = true;
+        mapInitialized = true;
+        console.log('Leaflet Map inicializado.');
 
-            // Ocultar el loading
-            var loadingDiv = document.getElementById('loading');
-            if (loadingDiv) {
-                loadingDiv.style.display = 'none';
-            }
-
-            console.log('✅ Mapa inicializado correctamente');
-
-            // Forzar actualización del tamaño
-            setTimeout(function() {
-                map.invalidateSize();
-                console.log('Tamaño del mapa actualizado');
-            }, 250);
-
-        } catch (error) {
-            console.error('❌ Error al inicializar mapa:', error);
-        }
+        // Llamar a onWebViewReady inmediatamente después de la creación
+        window.onWebViewReady();
     }
 
-    /**
-     * Función para actualizar la ubicación del mapa
-     * Esta función será llamada desde Java cuando se cargue una actividad
-     */
-    function updateMapLocation(lat, lng, label) {
-        console.log('📍 updateMapLocation llamada:', lat, lng, label);
+    // FUNCIÓN DE SINCRONIZACIÓN DE JAVA: Forzar Redibujado
+    window.onWebViewReady = function() {
+        if (!mapInitialized) initializeLeafletMap();
 
-        // Si el mapa no está inicializado, inicializarlo primero
-        if (!mapInitialized) {
-            console.log('Mapa no inicializado, inicializando...');
-            initMap();
-
-            // Esperar a que el mapa se inicialice
+        // Ejecutamos invalidateSize varias veces para asegurar que Leaflet vea el tamaño real.
+        var intervals = [0, 50, 200, 500];
+        intervals.forEach(function(time) {
             setTimeout(function() {
-                updateMapLocation(lat, lng, label);
-            }, 500);
+                if(map) {
+                    // Usamos 'true' para forzar una detección de tamaño más agresiva
+                    map.invalidateSize(true);
+                    console.log('invalidateSize ejecutado después de ' + time + 'ms');
+                }
+            }, time);
+        });
+    };
+
+    // Esta función la llama Java para poner el marcador
+    window.updateMapLocation = function(lat, lng, label) {
+        if (!mapInitialized) initializeLeafletMap();
+
+        var latNum = parseFloat(lat);
+        var lngNum = parseFloat(lng);
+
+        console.log('JS recibiendo: Lat=', lat, 'Lng=', lng, 'Parsed LatNum=', latNum, 'LngNum=', lngNum);
+
+        if (isNaN(latNum) || isNaN(lngNum)) {
+            console.error("Coordenadas inválidas recibidas. Verifique el separador decimal en la consola de Java.");
             return;
         }
 
-        try {
-            // Validar coordenadas
-            if (isNaN(lat) || isNaN(lng)) {
-                console.error('❌ Coordenadas inválidas:', lat, lng);
-                return;
-            }
+        // Mover marcador
+        if (marker) map.removeLayer(marker);
 
-            // Remover marcador anterior si existe
-            if (marker) {
-                map.removeLayer(marker);
-                console.log('Marcador anterior eliminado');
-            }
+        var icon = L.divIcon({
+            className: 'custom-marker',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -15]
+        });
 
-            // Crear icono personalizado
-            var customIcon = L.divIcon({
-                className: 'custom-marker',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
-            });
+        marker = L.marker([latNum, lngNum], {icon: icon}).addTo(map);
 
-            // Crear nuevo marcador con icono personalizado
-            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-
-            // Crear popup con estilo personalizado
-            var popupContent = '<div style="text-align: center;"><b>📍 ' + label + '</b></div>';
-            marker.bindPopup(popupContent, {
-                className: 'custom-popup',
-                maxWidth: 300
+        if(label) {
+            marker.bindPopup("<b>" + label + "</b>", {
+                className: 'custom-popup'
             }).openPopup();
-
-            // Centrar el mapa en la ubicación con animación
-            map.flyTo([lat, lng], 15, {
-                duration: 1.5,
-                easeLinearity: 0.5
-            });
-
-            console.log('✅ Mapa actualizado correctamente a:', lat, lng);
-
-        } catch (error) {
-            console.error('❌ Error al actualizar mapa:', error);
         }
-    }
 
-    // Inicializar el mapa cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM cargado, inicializando mapa...');
-        setTimeout(initMap, 100);
-    });
+        // Centrar y hacer zoom en la ubicación sin animación para evitar conflictos de timing.
+        map.setView([latNum, lngNum], 16, { animate: false });
 
-    // Backup: inicializar después de un delay si DOMContentLoaded no se dispara
-    setTimeout(function() {
-        if (!mapInitialized) {
-            console.log('Inicializando mapa por timeout...');
-            initMap();
-        }
-    }, 500);
+        // Forzar repintado tras el movimiento final (por si acaso).
+        setTimeout(function(){
+            map.invalidateSize(true);
+        }, 100);
+    };
 
-    // Manejar redimensionamiento
-    window.addEventListener('resize', function() {
-        if (map) {
-            setTimeout(function() {
-                map.invalidateSize();
-            }, 100);
-        }
-    });
+    // Arranque inicial.
+    initializeLeafletMap();
 </script>
 </body>
 </html>
