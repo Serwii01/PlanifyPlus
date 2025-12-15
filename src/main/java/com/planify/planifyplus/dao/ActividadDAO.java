@@ -1,10 +1,15 @@
 package com.planify.planifyplus.dao;
 
 import com.planify.planifyplus.dto.ActividadDTO;
+import com.planify.planifyplus.dto.DenunciaActividadDTO;
+import com.planify.planifyplus.dto.UsuarioDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.TypedQuery;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class ActividadDAO {
@@ -143,12 +148,16 @@ public class ActividadDAO {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-            ActividadDTO act = em.find(ActividadDTO.class, idActividad);
+
+            // Bloqueo para que no se pisen denuncias simultáneas
+            ActividadDTO act = em.find(ActividadDTO.class, idActividad, LockModeType.PESSIMISTIC_WRITE);
+
             if (act != null) {
                 int actuales = act.getNumDenuncias();
                 act.setNumDenuncias(actuales + 1);
                 em.merge(act);
             }
+
             tx.commit();
         } catch (Exception e) {
             if (tx.isActive()) tx.rollback();
@@ -170,8 +179,72 @@ public class ActividadDAO {
                 )
                 .getResultList();
     }
+
+    // ================== NUEVO: DENUNCIA PERSISTENTE POR USUARIO ==================
+
+    /**
+     * Compruebo si un usuario ya ha denunciado una actividad.
+     * Esto me sirve para que, aunque cierre la app, siga saliendo "Ya denunciada".
+     */
+    public boolean usuarioYaDenuncio(long idUsuario, long idActividad) {
+        TypedQuery<Long> q = em.createQuery(
+                "SELECT COUNT(d.id) FROM DenunciaActividadDTO d " +
+                        "WHERE d.usuario.id = :u AND d.actividad.id = :a",
+                Long.class
+        );
+        q.setParameter("u", idUsuario);
+        q.setParameter("a", idActividad);
+        return q.getSingleResult() > 0;
+    }
+
+    /**
+     * Guardo la denuncia en la tabla intermedia y además incremento el contador numDenuncias.
+     * Si ya existía denuncia (por unique constraint o por comprobación), no hago nada.
+     */
+    public void denunciarActividad(long idUsuario, long idActividad) {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+
+            // Compruebo aquí mismo para evitar queries duplicadas fuera de tx
+            Long yaExiste = em.createQuery(
+                            "SELECT COUNT(d.id) FROM DenunciaActividadDTO d " +
+                                    "WHERE d.usuario.id = :u AND d.actividad.id = :a",
+                            Long.class
+                    )
+                    .setParameter("u", idUsuario)
+                    .setParameter("a", idActividad)
+                    .getSingleResult();
+
+            if (yaExiste != null && yaExiste > 0) {
+                tx.commit();
+                return;
+            }
+
+            // Bloqueo la actividad para evitar que se pisen los +1
+            ActividadDTO act = em.find(ActividadDTO.class, idActividad, LockModeType.PESSIMISTIC_WRITE);
+            if (act == null) {
+                tx.rollback();
+                return;
+            }
+
+            UsuarioDTO usuarioRef = em.getReference(UsuarioDTO.class, idUsuario);
+
+            DenunciaActividadDTO denuncia = new DenunciaActividadDTO();
+            denuncia.setUsuario(usuarioRef);
+            denuncia.setActividad(act);
+            denuncia.setFechaDenuncia(LocalDateTime.now());
+            em.persist(denuncia);
+
+            int actuales = act.getNumDenuncias();
+            act.setNumDenuncias(actuales + 1);
+            em.merge(act);
+
+            tx.commit();
+
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            e.printStackTrace();
+        }
+    }
 }
-
-
-
-

@@ -2,9 +2,13 @@ package com.planify.planifyplus.dto;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -67,10 +71,21 @@ public class ActividadDTO {
     // ================= NUEVO: CONTADOR DE DENUNCIAS =================
 
     /**
-     * Número de veces que esta actividad ha sido denunciada.
-     * Lo inicio a 0 para que todas las actividades nuevas empiecen sin denuncias.
-     * Con hbm2ddl=update, Hibernate añadirá la columna num_denuncias si no existe.
+     * Número total de denuncias recibidas.
+     * Se usa para ordenar las actividades denunciadas en el admin.
      */
     @Column(name = "num_denuncias", nullable = false)
     private int numDenuncias = 0;
+
+    // ================= NUEVO: RELACIÓN CON DENUNCIAS =================
+
+    /**
+     * Denuncias asociadas a esta actividad.
+     * Me sirve para saber qué usuarios la han denunciado
+     * y evitar denuncias duplicadas.
+     */
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "actividad", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<DenunciaActividadDTO> denuncias = new ArrayList<>();
 }

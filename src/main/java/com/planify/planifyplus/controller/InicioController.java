@@ -26,18 +26,18 @@ public class InicioController {
     @FXML private VBox contenedorComunidad, contenedorUsuario;
     @FXML private ScrollPane scrollActividadesComunidad, scrollActividadesUsuario;
     @FXML private Label lblAdminBadge;
+    @FXML private Label lblTituloPanelDerecho; // Label del título "Mis actividades creadas"
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
 
     public void initialize() {
         logoImage.setImage(new Image(getClass().getResource("/img/descarga.png").toExternalForm()));
         cargarActividadesComunidad();
+
         boolean loggedIn = Sesion.getUsuarioActual() != null;
         updateUIForSession(loggedIn);
-        if (loggedIn) {
-            cargarActividadesUsuario();
-        }
         configurarUIRol();
+
         VBox.setVgrow(scrollActividadesComunidad, Priority.ALWAYS);
         VBox.setVgrow(scrollActividadesUsuario, Priority.ALWAYS);
     }
@@ -45,7 +45,6 @@ public class InicioController {
     // ============================================================
     // CARGA DE ACTIVIDADES
     // ============================================================
-
 
     //metodo que coloca las actividades en el contenedor de la izquierda
     private void cargarActividadesComunidad() {
@@ -83,6 +82,29 @@ public class InicioController {
         List<ActividadDTO> actividades = actividadDAO.obtenerCreadasPorUsuario(idUsuario);
         for (ActividadDTO act : actividades) {
             contenedorUsuario.getChildren().add(crearCardActividad(act));
+        }
+    }
+
+    // actividades denunciadas para el admin
+    private void cargarActividadesDenunciadas() {
+        contenedorUsuario.getChildren().clear();
+        List<ActividadDTO> denunciadas = actividadDAO.obtenerDenunciadasOrdenadas();
+        for (ActividadDTO act : denunciadas) {
+            contenedorUsuario.getChildren().add(crearCardActividad(act));
+        }
+    }
+
+    // decide qué cargar en el panel derecho según el rol
+    private void cargarPanelDerechoSegunRol() {
+        if (!Sesion.haySesion()) {
+            contenedorUsuario.getChildren().clear();
+            return;
+        }
+
+        if (Sesion.esAdmin()) {
+            cargarActividadesDenunciadas();
+        } else {
+            cargarActividadesUsuario();
         }
     }
 
@@ -138,10 +160,11 @@ public class InicioController {
         HBox hBoton = new HBox(8);
         hBoton.setAlignment(Pos.CENTER_RIGHT);
 
-        // Verificar si la actividad pertenece al usuario actual
         boolean esCreadorUsuario = Sesion.getUsuarioActual() != null &&
                 act.getCreador() != null &&
                 act.getCreador().getId() == Sesion.getUsuarioActual().getId();
+
+        boolean esAdmin = Sesion.esAdmin();
 
         // Si el usuario es el creador, mostrar botones de editar y eliminar
         if (esCreadorUsuario) {
@@ -176,8 +199,26 @@ public class InicioController {
             });
 
             hBoton.getChildren().addAll(btnEditar, btnEliminar);
+
+        } else if (esAdmin) {
+            // Admin: solo botón Eliminar (sin Inscribirse)
+            Button btnEliminarAdmin = new Button("Eliminar");
+            btnEliminarAdmin.setStyle(
+                    "-fx-background-color: #DC2626;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-background-radius: 18;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-padding: 6 18 6 18;" +
+                            "-fx-cursor: hand;"
+            );
+            btnEliminarAdmin.setOnAction(e -> {
+                e.consume();
+                onEliminarActividad(act);
+            });
+            hBoton.getChildren().add(btnEliminarAdmin);
+
         } else {
-            // Botón Inscribirse para actividades de otros usuarios
+            // Botón Inscribirse para actividades de otros usuarios (usuario normal)
             Button btnInscribir = new Button("Inscribirse");
             btnInscribir.setStyle(
                     "-fx-background-color: #3B82F6;" +
@@ -187,23 +228,6 @@ public class InicioController {
                             "-fx-padding: 6 22 6 22;"
             );
             hBoton.getChildren().add(btnInscribir);
-        }
-
-        // Si es admin, añadir botón adicional de eliminar (mantener lógica existente)
-        if (Sesion.esAdmin() && !esCreadorUsuario) {
-            Button btnEliminarAdmin = new Button("Eliminar");
-            btnEliminarAdmin.setStyle(
-                    "-fx-background-color: #DC2626;" +
-                            "-fx-text-fill: white;" +
-                            "-fx-background-radius: 18;" +
-                            "-fx-font-size: 14;" +
-                            "-fx-padding: 6 18 6 18;"
-            );
-            btnEliminarAdmin.setOnAction(e -> {
-                e.consume();
-                onEliminarActividad(act);
-            });
-            hBoton.getChildren().add(btnEliminarAdmin);
         }
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
@@ -251,7 +275,7 @@ public class InicioController {
         if (resultado == btnEliminar) {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
-            cargarActividadesUsuario();
+            cargarPanelDerechoSegunRol();
 
             Alert confirmacion = new Alert(Alert.AlertType.INFORMATION);
             confirmacion.setTitle("Actividad eliminada");
@@ -347,18 +371,22 @@ public class InicioController {
         if (loggedIn && Sesion.getUsuarioActual() != null) {
             lblUser.setText(Sesion.getUsuarioActual().getNombre().substring(0, 1));
             lblCiudad.setText(Sesion.getUsuarioActual().getCiudad());
-            cargarActividadesUsuario();
         } else {
             lblUser.setText("");
             lblCiudad.setText("");
             contenedorUsuario.getChildren().clear();
         }
+
+        // cargo el panel derecho según el rol
+        cargarPanelDerechoSegunRol();
     }
+
     //cuando el usuario se logea la interfaz cambia
     public void onUsuarioLogueado() {
         updateUIForSession(true);
         configurarUIRol();
         cargarActividadesComunidad();
+        cargarPanelDerechoSegunRol();
     }
 
     // Cambiar la interfaz segun el rol
@@ -368,6 +396,21 @@ public class InicioController {
         if (lblAdminBadge != null) {
             lblAdminBadge.setVisible(esAdmin);
             lblAdminBadge.setManaged(esAdmin);
+        }
+
+        // cambio el título del panel derecho
+        if (lblTituloPanelDerecho != null) {
+            if (esAdmin) {
+                lblTituloPanelDerecho.setText("Actividades denunciadas");
+            } else {
+                lblTituloPanelDerecho.setText("Mis Actividades Creadas");
+            }
+        }
+
+        // oculto el boton de crear actividad para admins
+        if (btnCrearActividad != null) {
+            btnCrearActividad.setVisible(Sesion.haySesion() && !esAdmin);
+            btnCrearActividad.setManaged(Sesion.haySesion() && !esAdmin);
         }
 
         if (cmbDistancia != null) {
@@ -413,10 +456,8 @@ public class InicioController {
             actividadDAO.eliminarPorId(act.getId());
             //despues vuelve a cargar las actividades de la comunidad
             cargarActividadesComunidad();
-            //y carga tambien las de los usuarios
-            if (Sesion.getUsuarioActual() != null) {
-                cargarActividadesUsuario();
-            }
+            //y recarga el panel derecho según el rol
+            cargarPanelDerechoSegunRol();
         }
     }
 }
