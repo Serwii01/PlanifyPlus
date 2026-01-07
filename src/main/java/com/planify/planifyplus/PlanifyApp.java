@@ -13,6 +13,9 @@ public class PlanifyApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // API key de Google Maps para GMapsFX
+        System.setProperty("gmapsfx.api.key", "AIzaSyAZC1YxJ7ZDdVyI6NBaA1TYj2TDdPC_3tg"); // [web:14][web:91]
+
         // Crear actividades predeterminadas al iniciar la aplicación
         actividadService.inicializarActividadesPredeterminadas();
 
@@ -25,7 +28,6 @@ public class PlanifyApp extends Application {
         primaryStage.setTitle("PlanifyPlus - Inicio");
         primaryStage.setScene(scene);
 
-        // Al cerrar la ventana, limpiar actividades predeterminadas y cerrar recursos
         primaryStage.setOnCloseRequest(event -> {
             actividadService.limpiarActividadesPredeterminadas();
             actividadService.cerrar();

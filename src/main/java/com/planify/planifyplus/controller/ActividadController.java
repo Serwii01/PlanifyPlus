@@ -2,7 +2,7 @@ package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.util.Sesion;
-import javafx.application.Platform; // NECESARIO
+import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,16 +13,14 @@ import javafx.scene.control.Label;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-
-import java.net.URL;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale; // CRÍTICO: Para el formato de punto decimal
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Locale;
 
 public class ActividadController {
 
-    @FXML private WebView webViewMapa;
+    @FXML private WebView webViewMap;
+
+    // UI
     @FXML private Label lblTipo;
     @FXML private Label lblTitulo;
     @FXML private Label lblDescripcion;
@@ -37,40 +35,80 @@ public class ActividadController {
     @FXML private Button btnVolver;
 
     private ActividadDTO actividad;
-    private WebEngine webEngine;
+    private WebEngine mapEngine;
+    private boolean mapaListo = false;
 
-    private final DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy");
-    private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("HH:mm");
-
-    private boolean mapaCargadoYListo = false;
+    private final DateTimeFormatter formatoFecha =
+            DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+    private final DateTimeFormatter formatoHora =
+            DateTimeFormatter.ofPattern("HH:mm");
 
     @FXML
     public void initialize() {
-        webEngine = webViewMapa.getEngine();
-        webEngine.setJavaScriptEnabled(true);
-
-        URL url = getClass().getResource("/API/map-crear-actividad.html");
-        if (url != null) {
-            webEngine.load(url.toExternalForm());
-            System.out.println("Cargando mapa desde: " + url.toExternalForm());
-        } else {
-            System.err.println("No se encontró /API/map-crear-actividad.html");
-        }
-
+        Platform.runLater(this::initMap);
         btnVolver.setOnAction(e -> volverAInicio());
         configurarInscripcionSegunSesion();
+    }
 
-        // Listener de carga del motor web
-        webEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
+    private void initMap() {
+        mapEngine = webViewMap.getEngine();
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8" />
+                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                <style>
+                    html, body, #map { height: 100%; margin: 0; padding: 0; border-radius: 12px; }
+                    #map { background: #f8fafc; }
+                </style>
+            </head>
+            <body>
+                <div id="map"></div>
+                <script>
+                    var map = L.map('map').setView([40.4168, -3.7038], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    
+                    // Función pública para centrar en coordenadas
+                    window.planifyMap = {
+                        setLocation: function(lat, lon, zoom) {
+                            var pos = [lat, lon];
+                            map.setView(pos, zoom || 15);
+                            
+                            // Remover marcador anterior si existe
+                            if (window.activityMarker) {
+                                map.removeLayer(window.activityMarker);
+                            }
+                            
+                            // Añadir nuevo marcador
+                            window.activityMarker = L.marker(pos)
+                                .addTo(map)
+                                .bindPopup('<b>Ubicación de la actividad</b><br>')
+                                .openPopup();
+                        },
+                        getCenter: function() {
+                            return map.getCenter();
+                        }
+                    };
+                    
+                    console.log('Mapa listo para recibir coordenadas');
+                </script>
+            </body>
+            </html>
+            """;
+
+        mapEngine.loadContent(html);
+
+        // Listener crítico: cuando el mapa esté listo
+        mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state == Worker.State.SUCCEEDED) {
+                mapaListo = true;
+                System.out.println("✅ Mapa WebView completamente listo");
 
-                // PRIMERO: Avisar a JS para que inicie y fuerce el redibujado.
-                webEngine.executeScript("window.onWebViewReady();");
-                System.out.println("-> JS: onWebViewReady() ejecutado.");
-
-                mapaCargadoYListo = true;
-
-                // SEGUNDO: Si hay actividad, inyectar coordenadas.
+                // Centrar inmediatamente si ya tenemos la actividad
                 if (actividad != null) {
                     actualizarMapaConActividad();
                 }
@@ -79,70 +117,60 @@ public class ActividadController {
     }
 
     public void setActividad(ActividadDTO actividad) {
+        System.out.println("📍 Recibiendo actividad: " + actividad.getTitulo());
         this.actividad = actividad;
-        if (actividad == null) return;
 
-        // Carga de labels
+        if (actividad == null) {
+            System.out.println("⚠️ Actividad null");
+            return;
+        }
+
+        // Actualizar UI
         lblTitulo.setText(actividad.getTitulo());
         lblDescripcion.setText(actividad.getDescripcion());
+
         String tipoStr = actividad.getTipo().toString();
-        lblTipo.setText(
-                tipoStr.substring(0, 1).toUpperCase() + tipoStr.substring(1).toLowerCase()
-        );
+        lblTipo.setText(tipoStr.substring(0, 1).toUpperCase() + tipoStr.substring(1).toLowerCase());
+
         lblFecha.setText(actividad.getFechaHoraInicio().format(formatoFecha));
         lblHora.setText(actividad.getFechaHoraInicio().format(formatoHora));
-        String ubicacion = actividad.getUbicacion() != null ? actividad.getUbicacion() : "";
-        String ciudad = actividad.getCiudad() != null ? actividad.getCiudad() : "";
-        lblUbicacionCaja.setText(ubicacion);
-        lblCiudadCaja.setText(ciudad);
+
+        lblUbicacionCaja.setText(actividad.getUbicacion() != null ? actividad.getUbicacion() : "Sin ubicación");
+        lblCiudadCaja.setText(actividad.getCiudad() != null ? actividad.getCiudad() : "Sin ciudad");
+
         lblPlazas.setText("1 / " + actividad.getAforo() + " personas inscritas");
 
-        // Si el mapa ya está cargado, inyectar coordenadas.
-        if (mapaCargadoYListo) {
+        System.out.println("📍 Coordenadas recibidas - Lat: " +
+                (actividad.getLatitud() != null ? actividad.getLatitud() : "NULL") +
+                ", Lon: " + (actividad.getLongitud() != null ? actividad.getLongitud() : "NULL"));
+
+        // Actualizar mapa si está listo
+        if (mapaListo) {
             actualizarMapaConActividad();
         }
     }
 
     private void actualizarMapaConActividad() {
-        if (actividad == null || actividad.getLatitud() == null || actividad.getLongitud() == null) {
-            System.out.println("No hay coordenadas para esta actividad");
+        if (!mapaListo || actividad == null) {
+            System.out.println("⏳ Esperando mapa listo o actividad null");
             return;
         }
 
-        // CRÍTICO: CONVERSIÓN A STRING ASEGURANDO EL PUNTO DECIMAL.
-        // Esto soluciona el problema de ubicación incorrecta.
-        String latStr = String.format(Locale.US, "%.6f", actividad.getLatitud().doubleValue());
-        String lngStr = String.format(Locale.US, "%.6f", actividad.getLongitud().doubleValue());
+        if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
+            System.out.println("⚠️ Sin coordenadas válidas, centrando en Madrid");
+            // Fallback a Madrid
+            mapEngine.executeScript("planifyMap.setLocation(40.4168, -3.7038, 12);");
+            return;
+        }
 
-        String label = (actividad.getUbicacion() != null ? actividad.getUbicacion() : "Ubicación")
-                .replace("'", "\\'").replace("\"", "\\\"");
+        double lat = actividad.getLatitud().doubleValue();
+        double lon = actividad.getLongitud().doubleValue();
 
-        // Script limpio usando los strings formateados.
-        String script = String.format(
-                "if (typeof window.updateMapLocation === 'function') {" +
-                        "  window.updateMapLocation(%s, %s, '%s');" +
-                        "} else { console.error('updateMapLocation no definida'); }",
-                latStr, lngStr, label
-        );
+        System.out.println("🎯 Centrando mapa en: " + lat + ", " + lon);
 
-        // SINCRONIZACIÓN FINAL: Retraso de 200ms para asegurar que el WebView terminó de pintar
-        // (Solución al mapa gris).
-        new Timer().schedule(
-                new TimerTask() {
-                    @Override
-                    public void run() {
-                        Platform.runLater(() -> {
-                            try {
-                                webEngine.executeScript(script);
-                                System.out.println("-> Coordenadas inyectadas después de 200ms: " + latStr + ", " + lngStr);
-                            } catch (Exception e) {
-                                System.err.println("Error inyectando script: " + e.getMessage());
-                            }
-                        });
-                    }
-                },
-                200 // Retraso en milisegundos
-        );
+        // EJECUTAR JavaScript para centrar
+        String jsCall = "planifyMap.setLocation(" + lat + ", " + lon + ", 16);";
+        mapEngine.executeScript(jsCall);
     }
 
     private void configurarInscripcionSegunSesion() {
@@ -154,7 +182,8 @@ public class ActividadController {
         }
         btnInscribirse.setOnAction(e -> {
             if (!loggedIn) return;
-            btnInscribirse.setText("Inscrito");
+            btnInscribirse.setText("Inscrito ✓");
+            btnInscribirse.setStyle("-fx-background-color: #10b981;");
             btnInscribirse.setDisable(true);
         });
     }
@@ -163,12 +192,14 @@ public class ActividadController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) webViewMapa.getScene().getWindow();
+            Stage stage = (Stage) webViewMap.getScene().getWindow();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             stage.setScene(scene);
+            stage.setTitle("PlanifyPlus - Inicio");
         } catch (Exception ex) {
             ex.printStackTrace();
+            System.err.println("❌ Error volver inicio: " + ex.getMessage());
         }
     }
 }

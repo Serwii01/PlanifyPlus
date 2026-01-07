@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+
 @Table(name = "actividades")
 public class ActividadDTO {
 
