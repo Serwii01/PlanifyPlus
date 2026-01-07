@@ -12,6 +12,7 @@ import java.util.List;
 
 @Data
 @Entity
+
 @Table(name = "actividades")
 public class ActividadDTO {
 

@@ -5,6 +5,7 @@ import com.planify.planifyplus.dao.DenunciaActividadDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import com.planify.planifyplus.util.Sesion;
+import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -15,13 +16,15 @@ import javafx.scene.control.Label;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-
-import java.net.URL;
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class ActividadController {
 
-    @FXML private WebView webViewMapa;
+    @FXML private WebView webViewMap;
+
+    // UI
     @FXML private Label lblTipo;
     @FXML private Label lblTitulo;
     @FXML private Label lblDescripcion;
@@ -36,56 +39,97 @@ public class ActividadController {
     @FXML private Button btnVolver;
 
     private ActividadDTO actividad;
-    private WebEngine webEngine;
+    private WebEngine mapEngine;
+    private boolean mapaListo = false;
+    private boolean mapaActualizado = false; // DE IVAN
 
     private final DateTimeFormatter formatoFecha =
-            DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy");
+            DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
     private final DateTimeFormatter formatoHora =
             DateTimeFormatter.ofPattern("HH:mm");
-
-    private boolean mapaActualizado = false;
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private final DenunciaActividadDAO denunciaDAO = new DenunciaActividadDAO();
 
     @FXML
     public void initialize() {
-        webEngine = webViewMapa.getEngine();
-        webEngine.setJavaScriptEnabled(true);
-
-        URL url = getClass().getResource("/API/map-crear-actividad.html");
-        if (url != null) {
-            webEngine.load(url.toExternalForm());
-            System.out.println("Cargando mapa desde: " + url.toExternalForm());
-        } else {
-            System.err.println("No se encontró /API/map-crear-actividad.html");
-        }
-
+        Platform.runLater(this::initMap);
         btnVolver.setOnAction(e -> volverAInicio());
         configurarInscripcionSegunSesion();
     }
 
+    private void initMap() {
+        mapEngine = webViewMap.getEngine();
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8" />
+                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                <style>
+                    html, body, #map { height: 100%; margin: 0; padding: 0; border-radius: 12px; }
+                    #map { background: #f8fafc; }
+                </style>
+            </head>
+            <body>
+                <div id="map"></div>
+                <script>
+                    var map = L.map('map').setView([40.4168, -3.7038], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    
+                    window.planifyMap = {
+                        setLocation: function(lat, lon, zoom) {
+                            var pos = [lat, lon];
+                            map.setView(pos, zoom || 15);
+                            if (window.activityMarker) map.removeLayer(window.activityMarker);
+                            window.activityMarker = L.marker(pos)
+                                .addTo(map)
+                                .bindPopup('<b>🅿️ Ubicación de la actividad</b>')
+                                .openPopup();
+                        }
+                    };
+                    console.log('Mapa listo');
+                </script>
+            </body>
+            </html>
+            """;
+
+        mapEngine.loadContent(html);
+
+        mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
+            if (state == Worker.State.SUCCEEDED) {
+                mapaListo = true;
+                System.out.println("✅ Mapa listo");
+                if (actividad != null) {
+                    actualizarMapaConActividad();
+                }
+            }
+        });
+    }
+
     public void setActividad(ActividadDTO actividad) {
+        System.out.println("📍 Actividad: " + actividad.getTitulo());
         this.actividad = actividad;
         if (actividad == null) return;
 
+        // UI
         lblTitulo.setText(actividad.getTitulo());
         lblDescripcion.setText(actividad.getDescripcion());
-
         String tipoStr = actividad.getTipo().toString();
         lblTipo.setText(tipoStr.substring(0, 1).toUpperCase() + tipoStr.substring(1).toLowerCase());
-
         lblFecha.setText(actividad.getFechaHoraInicio().format(formatoFecha));
         lblHora.setText(actividad.getFechaHoraInicio().format(formatoHora));
-
-        String ubicacion = actividad.getUbicacion() != null ? actividad.getUbicacion() : "";
-        String ciudad = actividad.getCiudad() != null ? actividad.getCiudad() : "";
-        lblUbicacionCaja.setText(ubicacion);
-        lblCiudadCaja.setText(ciudad);
-
+        lblUbicacionCaja.setText(actividad.getUbicacion() != null ? actividad.getUbicacion() : "Sin ubicación");
+        lblCiudadCaja.setText(actividad.getCiudad() != null ? actividad.getCiudad() : "Sin ciudad");
         lblPlazas.setText("1 / " + actividad.getAforo() + " personas inscritas");
 
-        webEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
+        System.out.println("📍 Lat: " + (actividad.getLatitud() != null ? actividad.getLatitud() : "NULL") +
+                          " Lon: " + (actividad.getLongitud() != null ? actividad.getLongitud() : "NULL"));
+
+        mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state == Worker.State.SUCCEEDED && !mapaActualizado) {
                 actualizarMapaConActividad();
             }
@@ -93,39 +137,38 @@ public class ActividadController {
 
         configurarInscripcionSegunSesion();
         configurarBotonDenunciarSegunSesionYActividad();
+        
+        if (mapaListo) {
+            actualizarMapaConActividad();
+        }
     }
 
     private void actualizarMapaConActividad() {
-        if (actividad == null || actividad.getLatitud() == null || actividad.getLongitud() == null) {
-            System.out.println("No hay coordenadas para esta actividad");
+        if (!mapaListo || actividad == null) return;
+
+        if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
+            System.out.println("⚠️ Sin coords, Madrid");
+            mapEngine.executeScript("planifyMap.setLocation(40.4168, -3.7038, 12);");
             return;
         }
 
         double lat = actividad.getLatitud().doubleValue();
-        double lng = actividad.getLongitud().doubleValue();
-        String label = actividad.getUbicacion() != null ? actividad.getUbicacion() : "Ubicación";
-
-        label = label.replace("'", "\\'").replace("\"", "\\\"");
-
-        String script = String.format(
-                "if (typeof window.updateMapLocation === 'function') {" +
-                        "  window.updateMapLocation(%f, %f, '%s');" +
-                        "} else { console.error('updateMapLocation no definida'); }",
-                lat, lng, label
-        );
+        double lon = actividad.getLongitud().doubleValue();
+        System.out.println("🎯 Mapa: " + lat + ", " + lon);
 
         try {
-            webEngine.executeScript(script);
+            String jsCall = "planifyMap.setLocation(" + lat + ", " + lon + ", 16);";
+            mapEngine.executeScript(jsCall);
             mapaActualizado = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("❌ JS Error: " + e.getMessage());
         }
     }
 
     private void configurarInscripcionSegunSesion() {
         boolean loggedIn = Sesion.getUsuarioActual() != null;
 
-        // Admin: no se inscribe
+        // ADMIN NO SE INSCRIBE (DE IVAN)
         if (Sesion.esAdmin()) {
             btnInscribirse.setVisible(false);
             btnInscribirse.setManaged(false);
@@ -136,14 +179,16 @@ public class ActividadController {
 
         btnInscribirse.setVisible(true);
         btnInscribirse.setManaged(true);
-
         btnInscribirse.setDisable(!loggedIn);
         lblDebeIniciarSesion.setVisible(!loggedIn);
-        lblDebeIniciarSesion.setManaged(!loggedIn);
+        if (loggedIn) {
+            lblDebeIniciarSesion.setManaged(false);
+        }
 
         btnInscribirse.setOnAction(e -> {
             if (!loggedIn) return;
-            btnInscribirse.setText("Inscrito");
+            btnInscribirse.setText("Inscrito ✓");
+            btnInscribirse.setStyle("-fx-background-color: #10b981;");
             btnInscribirse.setDisable(true);
         });
     }
@@ -162,7 +207,6 @@ public class ActividadController {
             return;
         }
 
-        // Admin no denuncia
         if (Sesion.esAdmin()) {
             btnDenunciar.setVisible(false);
             btnDenunciar.setManaged(false);
@@ -180,11 +224,9 @@ public class ActividadController {
 
         long idUsuario = usuario.getId();
         long idActividad = actividad.getId();
+        boolean yaDenunciada = denunciaDAO.existeDenuncia(idUsuario, idActividad);
 
-        // Persistente (BD). Si existe -> "Ya denunciada" incluso tras reiniciar
-        boolean yaDenunciadaBD = denunciaDAO.existeDenuncia(idUsuario, idActividad);
-
-        if (yaDenunciadaBD) {
+        if (yaDenunciada) {
             btnDenunciar.setDisable(true);
             btnDenunciar.setText("Ya denunciada");
         } else {
@@ -196,8 +238,7 @@ public class ActividadController {
 
     private void manejarDenuncia() {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
-        if (usuario == null || actividad == null || actividad.getId() == null) return;
-        if (Sesion.esAdmin()) return;
+        if (usuario == null || actividad == null || actividad.getId() == null || Sesion.esAdmin()) return;
 
         long idUsuario = usuario.getId();
         long idActividad = actividad.getId();
@@ -208,24 +249,22 @@ public class ActividadController {
             return;
         }
 
-        // 1) Guardar denuncia persistente
         denunciaDAO.crearDenuncia(idUsuario, idActividad);
-
-        // 2) Incrementar contador en actividad (para ordenar en admin)
         actividadDAO.incrementarDenuncias(idActividad);
 
         btnDenunciar.setDisable(true);
-        btnDenunciar.setText("Denuncia enviada");
+        btnDenunciar.setText("Denuncia enviada ✓");
     }
 
     private void volverAInicio() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) webViewMapa.getScene().getWindow();
+            Stage stage = (Stage) webViewMap.getScene().getWindow();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             stage.setScene(scene);
+            stage.setTitle("PlanifyPlus - Inicio");
         } catch (Exception ex) {
             ex.printStackTrace();
         }

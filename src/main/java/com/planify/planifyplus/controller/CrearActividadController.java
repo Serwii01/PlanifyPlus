@@ -9,8 +9,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -24,30 +27,75 @@ public class CrearActividadController {
     @FXML private TextField txtUbicacion;
     @FXML private TextField txtCiudad;
     @FXML private TextField txtAforo;
+    @FXML private TextField txtLatitud;
+    @FXML private TextField txtLongitud;
+    @FXML private WebView webViewBuscador;
     @FXML private Button btnGuardar;
     @FXML private Label lblTituloPagina;
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private ActividadDTO actividadAEditar = null;
+    private WebEngine webEngine;
 
     @FXML
     public void initialize() {
         // Cargar tipos de actividad
         cmbTipo.getItems().addAll("DEPORTIVA", "CULTURAL", "TALLERES");
+
+        // Inicializar WebView
+        inicializarBuscadorMapa();
+    }
+
+    private void inicializarBuscadorMapa() {
+        webEngine = webViewBuscador.getEngine();
+        webEngine.setJavaScriptEnabled(true);
+
+        // Cargar el HTML del buscador
+        String htmlContent = getClass().getResource("/API/map-buscador-ubicacion.html").toExternalForm();
+        webEngine.load(htmlContent);
+
+        // Esperar a que se cargue para inyectar el puente Java
+        webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+                JSObject window = (JSObject) webEngine.executeScript("window");
+                window.setMember("javaApp", new JavaScriptBridge());
+
+                // Si hay ciudad en el contexto, pasarla al buscador
+                if (txtCiudad.getText() != null && !txtCiudad.getText().trim().isEmpty()) {
+                    webEngine.executeScript("setCityContext('" + txtCiudad.getText() + "')");
+                }
+            }
+        });
+
+        // Listener para actualizar el contexto de ciudad
+        txtCiudad.textProperty().addListener((obs, old, newVal) -> {
+            if (webEngine != null && newVal != null && !newVal.trim().isEmpty()) {
+                webEngine.executeScript("setCityContext('" + newVal + "')");
+            }
+        });
     }
 
     /**
-     * Método público para cargar actividad existente (llamado desde InicioController)
+     * Puente JavaScript para recibir la ubicación seleccionada
      */
+    public class JavaScriptBridge {
+        public void onLocationSelected(String displayName, double lat, double lon) {
+            javafx.application.Platform.runLater(() -> {
+                txtUbicacion.setText(displayName);
+                txtLatitud.setText(String.valueOf(lat));
+                txtLongitud.setText(String.valueOf(lon));
+                System.out.println("✓ Ubicación recibida: " + displayName + " (" + lat + ", " + lon + ")");
+            });
+        }
+    }
+
     public void setActividadParaEditar(ActividadDTO actividad) {
         this.actividadAEditar = actividad;
 
-        // Rellenar campos
         txtTitulo.setText(actividad.getTitulo());
         txtDescripcion.setText(actividad.getDescripcion());
         dpFecha.setValue(actividad.getFechaHoraInicio().toLocalDate());
 
-        // Extraer hora
         LocalTime hora = actividad.getFechaHoraInicio().toLocalTime();
         txtHora.setText(String.format("%02d:%02d", hora.getHour(), hora.getMinute()));
 
@@ -56,7 +104,14 @@ public class CrearActividadController {
         txtCiudad.setText(actividad.getCiudad());
         txtAforo.setText(String.valueOf(actividad.getAforo()));
 
-        // Cambiar título y texto del botón
+        // Cargar coordenadas si existen
+        if (actividad.getLatitud() != null) {
+            txtLatitud.setText(actividad.getLatitud().toString());
+        }
+        if (actividad.getLongitud() != null) {
+            txtLongitud.setText(actividad.getLongitud().toString());
+        }
+
         if (lblTituloPagina != null) {
             lblTituloPagina.setText("Editar Actividad");
         }
@@ -94,7 +149,7 @@ public class CrearActividadController {
         }
 
         if (txtUbicacion.getText().trim().isEmpty()) {
-            mostrarError("La ubicación es obligatoria");
+            mostrarError("Debes seleccionar una ubicación del buscador");
             return;
         }
 
@@ -109,7 +164,7 @@ public class CrearActividadController {
         }
 
         try {
-            // Parsear hora (formato HH:mm)
+            // Parsear hora
             String[] horaPartes = txtHora.getText().split(":");
             if (horaPartes.length != 2) {
                 mostrarError("Formato de hora inválido. Usa HH:mm (ej. 18:30)");
@@ -124,10 +179,8 @@ public class CrearActividadController {
                 return;
             }
 
-            // Crear LocalDateTime
             LocalDateTime fechaHora = dpFecha.getValue().atTime(hora, minutos);
 
-            // Parsear aforo
             int aforo = Integer.parseInt(txtAforo.getText());
             if (aforo <= 0) {
                 mostrarError("El aforo debe ser mayor que 0");
@@ -136,17 +189,15 @@ public class CrearActividadController {
 
             ActividadDTO actividad;
             if (actividadAEditar != null) {
-                // Modo edición: actualizar actividad existente
                 actividad = actividadAEditar;
             } else {
-                // Modo creación: nueva actividad
                 actividad = new ActividadDTO();
                 actividad.setPredeterminada(false);
                 actividad.setCreador(Sesion.getUsuarioActual());
                 actividad.setCreadoEn(LocalDateTime.now());
             }
 
-            // Actualizar campos comunes
+            // Actualizar campos
             actividad.setTitulo(txtTitulo.getText().trim());
             actividad.setDescripcion(txtDescripcion.getText().trim());
             actividad.setFechaHoraInicio(fechaHora);
@@ -155,10 +206,16 @@ public class CrearActividadController {
             actividad.setCiudad(txtCiudad.getText().trim());
             actividad.setAforo(aforo);
 
-            // Guardar en la base de datos
+            // Guardar coordenadas si existen
+            if (!txtLatitud.getText().trim().isEmpty()) {
+                actividad.setLatitud(new BigDecimal(txtLatitud.getText()));
+            }
+            if (!txtLongitud.getText().trim().isEmpty()) {
+                actividad.setLongitud(new BigDecimal(txtLongitud.getText()));
+            }
+
             actividadDAO.guardar(actividad);
 
-            // Mostrar mensaje de éxito
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Éxito");
             alert.setHeaderText(null);
@@ -167,14 +224,13 @@ public class CrearActividadController {
                     : "Actividad creada correctamente");
             alert.showAndWait();
 
-            // Volver a inicio
             irAInicio();
 
         } catch (NumberFormatException e) {
-            mostrarError("Formato de hora o aforo inválido. La hora debe ser HH:mm");
+            mostrarError("Formato de hora o aforo inválido");
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarError("Error al guardar la actividad: " + e.getMessage());
+            mostrarError("Error al guardar: " + e.getMessage());
         }
     }
 
@@ -183,14 +239,10 @@ public class CrearActividadController {
         irAInicio();
     }
 
-    /**
-     * Vuelve a la pantalla de inicio
-     */
     private void irAInicio() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
             Parent root = loader.load();
-
             Stage stage = (Stage) btnGuardar.getScene().getWindow();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
@@ -201,9 +253,6 @@ public class CrearActividadController {
         }
     }
 
-    /**
-     * Muestra un mensaje de error al usuario
-     */
     private void mostrarError(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
