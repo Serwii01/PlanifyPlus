@@ -13,8 +13,7 @@ public class PlanifyApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // API key de Google Maps para GMapsFX
-        System.setProperty("gmapsfx.api.key", "AIzaSyAZC1YxJ7ZDdVyI6NBaA1TYj2TDdPC_3tg"); // [web:14][web:91]
+        //
 
         // Crear actividades predeterminadas al iniciar la aplicación
         actividadService.inicializarActividadesPredeterminadas();
