@@ -271,19 +271,27 @@ public class InicioController {
 
     //abrir la vista de la actividad en detalle
     private void abrirDetalleActividad(ActividadDTO actividad) {
+        System.out.println("🔍 DEBUG - Actividad completa:");
+        System.out.println("  Título: " + actividad.getTitulo());
+        System.out.println("  Lat: " + actividad.getLatitud());
+        System.out.println("  Lon: " + actividad.getLongitud());
+        System.out.println("  Ubicación: " + actividad.getUbicacion());
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/Actividad.fxml"));
             Parent root = loader.load();
             ActividadController controller = loader.getController();
             controller.setActividad(actividad);
             Stage stage = (Stage) logoImage.getScene().getWindow();
-            Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.setScene(scene);
+            stage.setScene(new Scene(root));
+            stage.getScene().getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.show();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
+
+
 
     //metodo para poner en mayusculas
     private String capitalize(String str) {

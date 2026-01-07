@@ -13,6 +13,8 @@ public class PlanifyApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        //
+
         // Crear actividades predeterminadas al iniciar la aplicación
         actividadService.inicializarActividadesPredeterminadas();
 
@@ -25,7 +27,6 @@ public class PlanifyApp extends Application {
         primaryStage.setTitle("PlanifyPlus - Inicio");
         primaryStage.setScene(scene);
 
-        // Al cerrar la ventana, limpiar actividades predeterminadas y cerrar recursos
         primaryStage.setOnCloseRequest(event -> {
             actividadService.limpiarActividadesPredeterminadas();
             actividadService.cerrar();
