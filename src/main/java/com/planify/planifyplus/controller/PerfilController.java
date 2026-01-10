@@ -1,8 +1,11 @@
 package com.planify.planifyplus.controller;
 
+import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dao.UsuarioDAO;
+import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import com.planify.planifyplus.util.Sesion;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -15,42 +18,32 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 
 public class PerfilController {
 
-    // --- UI del header ---
     @FXML private Button btnHomePerfil;
     @FXML private Label lblNombreUsuario;
     @FXML private Label lblEmailUsuario;
 
-    // --- Actividades inscritas ---
     @FXML private VBox vboxActividadesInscritas;
     @FXML private Button btnExplorarActividades;
 
-    // --- Calendario ---
     @FXML private Label lblMesAnio;
     @FXML private GridPane gridCalendario;
     @FXML private Button btnMesAnterior;
     @FXML private Button btnMesSiguiente;
 
-    // DAO por si lo necesitáis (aunque ahora mismo no lo usamos directamente)
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
-    // Mes que se está mostrando en el calendario
     private YearMonth mesActual = YearMonth.now();
-
-    // ================== INICIALIZACIÓN ==================
 
     @FXML
     public void initialize() {
-        // 1) Cargar datos del usuario en el header
         cargarDatosUsuario();
-
-        // 2) Inicializar calendario del mes actual
+        cargarActividadesInscritas();
         cargarCalendario(mesActual);
-
-        // 3) De momento, el VBox de actividades se queda con el mensaje por defecto
-        //    (cuando tengáis inscripciones, aquí se actualizará).
     }
 
     private void cargarDatosUsuario() {
@@ -62,32 +55,47 @@ public class PerfilController {
             return;
         }
 
-        // Si quisieras recargar desde BD:
-        // usuario = usuarioDAO.obtenerPorId(usuario.getId());
-
         lblNombreUsuario.setText(usuario.getNombre());
         lblEmailUsuario.setText(usuario.getEmail());
     }
 
-    // ================== CALENDARIO (LUNES–DOMINGO) ==================
+    private void cargarActividadesInscritas() {
+        vboxActividadesInscritas.getChildren().clear();
+
+        if (!Sesion.haySesion()) {
+            Label lbl = new Label("Inicia sesión para ver tus inscripciones.");
+            vboxActividadesInscritas.getChildren().add(lbl);
+            return;
+        }
+
+        List<ActividadDTO> actividades = inscripcionDAO.obtenerActividadesInscritas(Sesion.getIdUsuario());
+
+        if (actividades.isEmpty()) {
+            Label lbl = new Label("No estás inscrito en ninguna actividad todavía.");
+            vboxActividadesInscritas.getChildren().add(lbl);
+            return;
+        }
+
+        for (ActividadDTO act : actividades) {
+            Label lbl = new Label("• " + act.getTitulo() + " (" + act.getFechaHoraInicio().toLocalDate() + ")");
+            lbl.setStyle("-fx-font-size: 14;");
+            vboxActividadesInscritas.getChildren().add(lbl);
+        }
+    }
 
     private void cargarCalendario(YearMonth mes) {
-        // Ejemplo: "October 2025" -> lo formateamos a "October 2025" pero podrías traducirlo si quieres
-        String nombreMes = mes.getMonth().toString().toLowerCase(); // "october"
+        String nombreMes = mes.getMonth().toString().toLowerCase();
         nombreMes = nombreMes.substring(0, 1).toUpperCase() + nombreMes.substring(1);
         lblMesAnio.setText(nombreMes + " " + mes.getYear());
 
-        // Limpiar cuadrícula
         gridCalendario.getChildren().clear();
 
         LocalDate primerDiaMes = mes.atDay(1);
         int diasMes = mes.lengthOfMonth();
 
-        // Queremos LUNES como primera columna.
-        // DayOfWeek: MONDAY=1 ... SUNDAY=7 -> offset = 0..6 (lunes..domingo)
-        int offset = primerDiaMes.getDayOfWeek().getValue() - 1; // Lunes=0, Martes=1, ..., Domingo=6
+        int offset = primerDiaMes.getDayOfWeek().getValue() - 1;
 
-        int fila = 0;  // primera fila para días
+        int fila = 0;
         int col = offset;
 
         for (int dia = 1; dia <= diasMes; dia++) {
@@ -100,15 +108,10 @@ public class PerfilController {
                             "-fx-font-size: 13px;"
             );
 
-            // TODO: si el usuario tiene actividades este día,
-            // aquí podrías cambiar el estilo para resaltarlo:
-            // lblDia.setStyle(lblDia.getStyle()
-            //      + "-fx-background-color: #4C8DF6; -fx-text-fill: white;");
-
             gridCalendario.add(lblDia, col, fila);
 
             col++;
-            if (col > 6) { // columnas 0..6 (Lunes..Domingo)
+            if (col > 6) {
                 col = 0;
                 fila++;
             }
@@ -127,8 +130,6 @@ public class PerfilController {
         cargarCalendario(mesActual);
     }
 
-    // ================== NAVEGACIÓN ==================
-
     @FXML
     private void onIrInicio() {
         cambiarEscena("/vistas/Inicio.fxml");
@@ -141,7 +142,6 @@ public class PerfilController {
 
     @FXML
     private void onExplorarActividades() {
-        // De momento lo mandamos al main / listado de actividades
         cambiarEscena("/vistas/Inicio.fxml");
     }
 
@@ -153,7 +153,6 @@ public class PerfilController {
             stage.centerOnScreen();
         } catch (IOException e) {
             e.printStackTrace();
-            // Aquí podrías mostrar un Alert si quieres
         }
     }
 }

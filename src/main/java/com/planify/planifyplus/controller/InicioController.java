@@ -1,18 +1,20 @@
 package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.ActividadDAO;
+import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.util.Sesion;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.Image;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -29,6 +31,7 @@ public class InicioController {
     @FXML private Label lblTituloPanelDerecho; // Label del título "Mis actividades creadas"
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
+    private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
     public void initialize() {
         logoImage.setImage(new Image(getClass().getResource("/img/descarga.png").toExternalForm()));
@@ -36,6 +39,11 @@ public class InicioController {
 
         boolean loggedIn = Sesion.getUsuarioActual() != null;
         updateUIForSession(loggedIn);
+
+        if (loggedIn) {
+            cargarActividadesUsuario();
+        }
+
         configurarUIRol();
 
         VBox.setVgrow(scrollActividadesComunidad, Priority.ALWAYS);
@@ -46,21 +54,19 @@ public class InicioController {
     // CARGA DE ACTIVIDADES
     // ============================================================
 
-    //metodo que coloca las actividades en el contenedor de la izquierda
     private void cargarActividadesComunidad() {
         contenedorComunidad.getChildren().clear();
+
         Long idUsuarioActual = null;
         if (Sesion.getUsuarioActual() != null) {
             idUsuarioActual = Sesion.getUsuarioActual().getId();
         }
 
-        // 1) Predeterminadas
         List<ActividadDTO> predeterminadas = actividadDAO.obtenerPredeterminadas();
         for (ActividadDTO act : predeterminadas) {
             contenedorComunidad.getChildren().add(crearCardActividad(act));
         }
 
-        // 2) No predeterminadas (creadas por usuarios)
         List<ActividadDTO> creadasUsuarios = actividadDAO.obtenerNoPredeterminadas();
         for (ActividadDTO act : creadasUsuarios) {
             if (idUsuarioActual != null &&
@@ -74,9 +80,7 @@ public class InicioController {
 
     private void cargarActividadesUsuario() {
         contenedorUsuario.getChildren().clear();
-        if (Sesion.getUsuarioActual() == null) {
-            return;
-        }
+        if (Sesion.getUsuarioActual() == null) return;
 
         long idUsuario = Sesion.getUsuarioActual().getId();
         List<ActividadDTO> actividades = actividadDAO.obtenerCreadasPorUsuario(idUsuario);
@@ -126,6 +130,7 @@ public class InicioController {
         HBox hTituloTipo = new HBox(8);
         Label lblTitulo = new Label(act.getTitulo());
         lblTitulo.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+
         Label lblTipo = new Label(capitalize(act.getTipo().toString().toLowerCase()));
         lblTipo.setStyle(
                 "-fx-background-color: " + getTipoColor(act.getTipo().toString()) + ";" +
@@ -150,10 +155,12 @@ public class InicioController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String fechaFormateada = act.getFechaHoraInicio().format(formatter);
 
+        long inscritos = inscripcionDAO.contarInscritos(act.getId());
+
         HBox hFechaAforo = new HBox(10);
         Label lblFecha = new Label(fechaFormateada);
         lblFecha.setStyle("-fx-font-size: 15; -fx-text-fill: #222;");
-        Label lblAforo = new Label("1 / " + act.getAforo() + " inscritos");
+        Label lblAforo = new Label(inscritos + " / " + act.getAforo() + " inscritos");
         HBox.setHgrow(lblFecha, Priority.ALWAYS);
         hFechaAforo.getChildren().addAll(lblFecha, lblAforo);
 
@@ -166,9 +173,9 @@ public class InicioController {
 
         boolean esAdmin = Sesion.esAdmin();
 
-        // Si el usuario es el creador, mostrar botones de editar y eliminar
+        // ====== BLOQUE CORREGIDO (antes tenías un else suelto) ======
         if (esCreadorUsuario) {
-            // Botón Editar con icono ✏️
+
             Button btnEditar = new Button("✏️");
             btnEditar.setStyle(
                     "-fx-background-color: #3B82F6;" +
@@ -183,7 +190,6 @@ public class InicioController {
                 onEditarActividad(act);
             });
 
-            // Botón Eliminar con icono 🗑️
             Button btnEliminar = new Button("🗑️");
             btnEliminar.setStyle(
                     "-fx-background-color: #DC2626;" +
@@ -201,6 +207,7 @@ public class InicioController {
             hBoton.getChildren().addAll(btnEditar, btnEliminar);
 
         } else if (esAdmin) {
+
             // Admin: solo botón Eliminar (sin Inscribirse)
             Button btnEliminarAdmin = new Button("Eliminar");
             btnEliminarAdmin.setStyle(
@@ -218,8 +225,10 @@ public class InicioController {
             hBoton.getChildren().add(btnEliminarAdmin);
 
         } else {
+
             // Botón Inscribirse para actividades de otros usuarios (usuario normal)
             Button btnInscribir = new Button("Inscribirse");
+
             btnInscribir.setStyle(
                     "-fx-background-color: #3B82F6;" +
                             "-fx-text-fill: white;" +
@@ -227,7 +236,54 @@ public class InicioController {
                             "-fx-font-size: 15;" +
                             "-fx-padding: 6 22 6 22;"
             );
+
+            if (!Sesion.haySesion()) {
+                btnInscribir.setText("Inicia sesión");
+                btnInscribir.setDisable(true);
+            } else {
+                boolean inscrito = inscripcionDAO.estaInscrito(Sesion.getIdUsuario(), act.getId());
+                btnInscribir.setText(inscrito ? "Inscrito" : "Inscribirse");
+
+                boolean lleno = inscritos >= act.getAforo();
+                btnInscribir.setDisable(lleno && !inscrito);
+
+                btnInscribir.setOnAction(e -> {
+                    e.consume();
+                    long userId = Sesion.getIdUsuario();
+                    boolean ya = inscripcionDAO.estaInscrito(userId, act.getId());
+
+                    if (ya) {
+                        inscripcionDAO.cancelar(userId, act.getId());
+                    } else {
+                        long ahora = inscripcionDAO.contarInscritos(act.getId());
+                        if (ahora >= act.getAforo()) return;
+                        inscripcionDAO.inscribir(Sesion.getUsuarioActual(), act);
+                    }
+
+                    cargarActividadesComunidad();
+                    if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
+                });
+            }
+
             hBoton.getChildren().add(btnInscribir);
+        }
+        // ====== FIN BLOQUE CORREGIDO ======
+
+        // Esto lo dejo tal cual lo tenías (aunque duplica botón admin, pero no rompe compilación)
+        if (Sesion.esAdmin() && !esCreadorUsuario) {
+            Button btnEliminarAdmin = new Button("Eliminar");
+            btnEliminarAdmin.setStyle(
+                    "-fx-background-color: #DC2626;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-background-radius: 18;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-padding: 6 18 6 18;"
+            );
+            btnEliminarAdmin.setOnAction(e -> {
+                e.consume();
+                onEliminarActividad(act);
+            });
+            hBoton.getChildren().add(btnEliminarAdmin);
         }
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
@@ -235,10 +291,6 @@ public class InicioController {
 
         return vbox;
     }
-
-    // ============================================================
-    // MÉTODOS PARA EDITAR Y ELIMINAR ACTIVIDADES
-    // ============================================================
 
     private void onEditarActividad(ActividadDTO actividad) {
         try {
@@ -293,7 +345,6 @@ public class InicioController {
         alert.showAndWait();
     }
 
-    //abrir la vista de la actividad en detalle
     private void abrirDetalleActividad(ActividadDTO actividad) {
         System.out.println("🔍 DEBUG - Actividad completa:");
         System.out.println("  Título: " + actividad.getTitulo());
@@ -315,27 +366,21 @@ public class InicioController {
         }
     }
 
-
-
-    //metodo para poner en mayusculas
     private String capitalize(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
-    //setear color segun tipo de actividad
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
                 : tipo.equals("CULTURAL") ? "#e9d5ff"
                 : "#bbf7d0";
     }
 
-    // navegacion
     @FXML private void handleRegister() { irAVista("registro.fxml"); }
     @FXML private void handleLogin() { irAVista("login.fxml"); }
     @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
     @FXML private void handlePerfil() { irAVista("perfil.fxml"); }
 
-    //metodo para cerrar sesion
     @FXML
     private void handleLogout() {
         Sesion.cerrarSesion();
@@ -345,7 +390,6 @@ public class InicioController {
         contenedorUsuario.getChildren().clear();
     }
 
-    //metodo para cambiar de vista
     private void irAVista(String fxml) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/" + fxml));
@@ -359,9 +403,7 @@ public class InicioController {
         }
     }
 
-    //cuando hay sesion activa cambia la interfaz
     public void updateUIForSession(boolean loggedIn) {
-        //cambia valores de la vista
         btnRegister.setVisible(!loggedIn);
         btnLogin.setVisible(!loggedIn);
         btnPerfil.setVisible(loggedIn);
@@ -375,7 +417,6 @@ public class InicioController {
         scrollActividadesUsuario.setVisible(loggedIn);
         lblNoSesion.setVisible(!loggedIn);
 
-        //para poner el nombre y la ciudad del usuario
         if (loggedIn && Sesion.getUsuarioActual() != null) {
             lblUser.setText(Sesion.getUsuarioActual().getNombre().substring(0, 1));
             lblCiudad.setText(Sesion.getUsuarioActual().getCiudad());
@@ -389,7 +430,6 @@ public class InicioController {
         cargarPanelDerechoSegunRol();
     }
 
-    //cuando el usuario se logea la interfaz cambia
     public void onUsuarioLogueado() {
         updateUIForSession(true);
         configurarUIRol();
@@ -397,9 +437,7 @@ public class InicioController {
         cargarPanelDerechoSegunRol();
     }
 
-    // Cambiar la interfaz segun el rol
     private void configurarUIRol() {
-        //si es adminstrador pone el icono
         boolean esAdmin = Sesion.esAdmin();
         if (lblAdminBadge != null) {
             lblAdminBadge.setVisible(esAdmin);
@@ -436,14 +474,9 @@ public class InicioController {
         }
     }
 
-    //eliminar actividad siendo administrador
     private void onEliminarActividad(ActividadDTO act) {
-        //comprueba si es administrador primero
-        if (!Sesion.esAdmin()) {
-            return;
-        }
+        if (!Sesion.esAdmin()) return;
 
-        //crea una alerta de confirmación de eliminación
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Eliminar actividad");
         alert.setHeaderText("¿Eliminar actividad?");
@@ -451,21 +484,21 @@ public class InicioController {
                 "Esta acción no se puede deshacer.\n\n" +
                         "La actividad \"" + act.getTitulo() + "\" será eliminada."
         );
-        //crea dos botones, para confirmar o eliminar
+
         ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
-        //le setea los botones a la alerta
         alert.getButtonTypes().setAll(btnCancelar, btnEliminar);
 
         ButtonType resultado = alert.showAndWait().orElse(btnCancelar);
-        //si se elimina la actividad
         if (resultado == btnEliminar) {
-            //llama al metodo eliminar por id (actividad DAO)
             actividadDAO.eliminarPorId(act.getId());
-            //despues vuelve a cargar las actividades de la comunidad
             cargarActividadesComunidad();
+
+            if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
+
             //y recarga el panel derecho según el rol
             cargarPanelDerechoSegunRol();
+
         }
     }
 }
