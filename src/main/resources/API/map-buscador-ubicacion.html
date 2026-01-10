@@ -84,6 +84,8 @@
 </div>
 
 <script>
+    console.log('🚀 Buscador de ubicación iniciando...');
+
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('results');
     const selectedLocationDiv = document.getElementById('selectedLocation');
@@ -92,6 +94,10 @@
     let searchTimeout;
     let lastSearchTime = 0;
     let cityContext = '';
+
+    // Variables globales para que Java las pueda leer por polling
+    window.selectedLat = null;
+    window.selectedLon = null;
 
     const SPAIN_BOUNDS = {
         minLat: 36.0,
@@ -102,7 +108,7 @@
 
     window.setCityContext = function(city) {
         cityContext = city;
-        console.log('Ciudad contexto:', cityContext);
+        console.log('📍 Ciudad contexto establecida:', cityContext);
     };
 
     searchInput.addEventListener('input', function () {
@@ -142,7 +148,7 @@
             '&viewbox=-9.3,43.8,4.3,36.0' +
             '&q=' + encodeURIComponent(searchQuery);
 
-        console.log('Buscando:', searchQuery);
+        console.log('🔍 Buscando:', searchQuery);
 
         fetch(url, {
             headers: { 'User-Agent': 'PlanifyPlus-JavaFX-App/1.0' }
@@ -156,14 +162,14 @@
                     const lat = parseFloat(r.lat);
                     const lon = parseFloat(r.lon);
                     const ok = lat >= SPAIN_BOUNDS.minLat && lat <= SPAIN_BOUNDS.maxLat &&
-                              lon >= SPAIN_BOUNDS.minLon && lon <= SPAIN_BOUNDS.maxLon;
-                    if (!ok) console.log('Descartado fuera de España:', r.display_name);
+                        lon >= SPAIN_BOUNDS.minLon && lon <= SPAIN_BOUNDS.maxLon;
+                    if (!ok) console.log('❌ Descartado fuera de España:', r.display_name);
                     return ok;
                 });
                 displayResults(filtered, query);
             })
             .catch(err => {
-                console.error(err);
+                console.error('❌ Error en búsqueda:', err);
                 resultsDiv.innerHTML = '<div class="error">⚠️ Error al buscar. Intenta de nuevo.</div>';
             });
     }
@@ -179,7 +185,7 @@
 
         results.sort((a, b) => {
             const order = { stadium:1, sports_centre:1, park:2, pitch:2,
-                            leisure:3, amenity:4, building:5, place:6 };
+                leisure:3, amenity:4, building:5, place:6 };
             const oa = order[a.type] || 10;
             const ob = order[b.type] || 10;
             if (oa === ob) {
@@ -225,26 +231,41 @@
         const lon = parseFloat(r.lon);
 
         const inSpain = lat >= SPAIN_BOUNDS.minLat && lat <= SPAIN_BOUNDS.maxLat &&
-                        lon >= SPAIN_BOUNDS.minLon && lon <= SPAIN_BOUNDS.maxLon;
+            lon >= SPAIN_BOUNDS.minLon && lon <= SPAIN_BOUNDS.maxLon;
         if (!inSpain) {
             alert('La ubicación seleccionada no está en España. Elige otra.');
             return;
         }
 
         const displayName = r.display_name;
-        console.log('Ubicación seleccionada:', displayName, lat, lon);
+        console.log('✅ Ubicación seleccionada:', displayName);
+        console.log('   📍 Lat:', lat);
+        console.log('   📍 Lon:', lon);
+
+        // Guardar en variables globales para que Java las pueda leer por polling
+        window.selectedLat = lat;
+        window.selectedLon = lon;
 
         locationTextDiv.textContent = displayName;
         selectedLocationDiv.classList.add('show');
         resultsDiv.style.display = 'none';
         searchInput.value = displayName;
 
+        // Intentar llamar a Java directamente (método 1)
+        console.log('🔍 Verificando javaApp...');
+        console.log('   typeof javaApp:', typeof javaApp);
+
         if (typeof javaApp !== 'undefined' && javaApp) {
+            console.log('✅ javaApp existe, llamando a onLocationSelected...');
             try {
                 javaApp.onLocationSelected(displayName, lat, lon);
+                console.log('✅ onLocationSelected ejecutado correctamente');
             } catch (e) {
-                console.error('Error enviando a Java:', e);
+                console.error('❌ Error llamando a javaApp.onLocationSelected:', e);
+                console.log('⚠️ Java leerá la ubicación por polling como fallback');
             }
+        } else {
+            console.log('⚠️ javaApp no disponible, Java lo leerá por polling');
         }
     }
 
@@ -258,7 +279,7 @@
         }
     });
 
-    console.log('Buscador de ubicación inicializado');
+    console.log('✅ Buscador de ubicación inicializado');
 </script>
 </body>
 </html>
