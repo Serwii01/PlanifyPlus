@@ -1,15 +1,18 @@
+// src/main/java/com/planify/planifyplus/controller/ActividadController.java
 package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.ActividadDAO;
 import com.planify.planifyplus.dao.DenunciaActividadDAO;
+import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import com.planify.planifyplus.util.Sesion;
+import com.planify.planifyplus.util.ViewUtil;
+import com.planify.planifyplus.util.WindowUtil;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -26,7 +29,6 @@ public class ActividadController {
 
     @FXML private WebView webViewMap;
 
-    // UI
     @FXML private Label lblTipo;
     @FXML private Label lblTitulo;
     @FXML private Label lblDescripcion;
@@ -47,7 +49,7 @@ public class ActividadController {
     private boolean mapaActualizado = false;
 
     private int intentosMapa = 0;
-    private static final int MAX_INTENTOS_MAPA = 6; // reintentos suaves por timing
+    private static final int MAX_INTENTOS_MAPA = 6;
 
     private final DateTimeFormatter formatoFecha =
             DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
@@ -56,22 +58,16 @@ public class ActividadController {
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private final DenunciaActividadDAO denunciaDAO = new DenunciaActividadDAO();
+    private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
     @FXML
     public void initialize() {
         btnVolver.setOnAction(e -> volverAInicio());
-        configurarInscripcionSegunSesion();
-
-        // IMPORTANTE: inicializar el mapa en cuanto la UI esté montada
         Platform.runLater(this::initMap);
     }
 
     private void initMap() {
-        // Por seguridad, si por lo que sea el webView no está inyectado, no rompemos.
-        if (webViewMap == null) {
-            System.err.println("❌ webViewMap es null (revisar fx:id en el FXML).");
-            return;
-        }
+        if (webViewMap == null) return;
 
         mapEngine = webViewMap.getEngine();
 
@@ -106,18 +102,14 @@ public class ActividadController {
                                 .openPopup();
                         }
                     };
-                    console.log('Mapa listo');
                 </script>
             </body>
             </html>
             """;
 
-        // Listener UNA sola vez (antes lo estabas metiendo también desde setActividad)
         mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state == Worker.State.SUCCEEDED) {
                 mapaListo = true;
-                System.out.println("✅ Mapa listo (SUCCEEDED)");
-                // si ya hay actividad cargada, actualizamos
                 actualizarMapaConActividadConReintento();
             }
         });
@@ -132,9 +124,6 @@ public class ActividadController {
 
         if (actividad == null) return;
 
-        System.out.println("📍 Actividad: " + actividad.getTitulo());
-
-        // UI
         lblTitulo.setText(actividad.getTitulo());
         lblDescripcion.setText(actividad.getDescripcion());
 
@@ -145,90 +134,24 @@ public class ActividadController {
         lblHora.setText(actividad.getFechaHoraInicio().format(formatoHora));
         lblUbicacionCaja.setText(actividad.getUbicacion() != null ? actividad.getUbicacion() : "Sin ubicación");
         lblCiudadCaja.setText(actividad.getCiudad() != null ? actividad.getCiudad() : "Sin ciudad");
-        lblPlazas.setText("1 / " + actividad.getAforo() + " personas inscritas");
 
-        System.out.println("📍 Lat: " + (actividad.getLatitud() != null ? actividad.getLatitud() : "NULL") +
-                " Lon: " + (actividad.getLongitud() != null ? actividad.getLongitud() : "NULL"));
+        if (actividad.getId() != null) {
+            long inscritos = inscripcionDAO.contarInscritos(actividad.getId());
+            lblPlazas.setText(inscritos + " / " + actividad.getAforo() + " personas inscritas");
+        } else {
+            lblPlazas.setText("0 / " + actividad.getAforo() + " personas inscritas");
+        }
 
-        configurarInscripcionSegunSesion();
+        // ✅ IMPORTANTÍSIMO: esto es lo que hace que dentro salga "Inscrito" si ya lo estás
+        actualizarEstadoInscripcion();
+
         configurarBotonDenunciarSegunSesionYActividad();
-
-        // Si el mapa aún no está listo / mapEngine aún no existe, no hacemos nada ahora.
-        // Cuando initMap termine, el listener SUCCEEDED llamará a actualizarMapaConActividadConReintento().
         actualizarMapaConActividadConReintento();
     }
 
-    private void actualizarMapaConActividadConReintento() {
-        // Siempre en el hilo FX
-        if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(this::actualizarMapaConActividadConReintento);
-            return;
-        }
-
-        if (actividad == null) return;
-        if (mapEngine == null) return;     // aún no inicializado
-        if (!mapaListo) return;            // aún no cargado
-        if (mapaActualizado) return;
-
-        // comprobación de que planifyMap existe (sin tocar tu JS)
-        boolean existePlanifyMap = false;
-        try {
-            Object res = mapEngine.executeScript("typeof planifyMap !== 'undefined'");
-            if (res instanceof Boolean b) {
-                existePlanifyMap = b;
-            }
-        } catch (Exception ignored) {
-            // si falla, tratamos como que no está listo y reintentamos
-        }
-
-        if (!existePlanifyMap) {
-            reintentarMapa();
-            return;
-        }
-
-        // coords
-        if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
-            System.out.println("⚠️ Sin coords, Madrid");
-            try {
-                mapEngine.executeScript("planifyMap.setLocation(40.4168, -3.7038, 12);");
-                mapaActualizado = true;
-            } catch (Exception e) {
-                System.err.println("❌ JS Error (Madrid): " + e.getMessage());
-                reintentarMapa();
-            }
-            return;
-        }
-
-        double lat = actividad.getLatitud().doubleValue();
-        double lon = actividad.getLongitud().doubleValue();
-        System.out.println("🎯 Mapa: " + lat + ", " + lon);
-
-        try {
-            String jsCall = "planifyMap.setLocation(" + lat + ", " + lon + ", 16);";
-            mapEngine.executeScript(jsCall);
-            mapaActualizado = true;
-        } catch (Exception e) {
-            System.err.println("❌ JS Error: " + e.getMessage());
-            reintentarMapa();
-        }
-    }
-
-    private void reintentarMapa() {
-        if (intentosMapa >= MAX_INTENTOS_MAPA) {
-            System.err.println("⚠️ No se pudo actualizar el mapa tras varios intentos (timing).");
-            return;
-        }
-        intentosMapa++;
-
-        PauseTransition pt = new PauseTransition(Duration.millis(180));
-        pt.setOnFinished(e -> actualizarMapaConActividadConReintento());
-        pt.play();
-    }
-
-    private void configurarInscripcionSegunSesion() {
+    private void actualizarEstadoInscripcion() {
         boolean loggedIn = Sesion.getUsuarioActual() != null;
 
-        // ADMIN NO SE INSCRIBE
         if (Sesion.esAdmin()) {
             btnInscribirse.setVisible(false);
             btnInscribirse.setManaged(false);
@@ -239,17 +162,103 @@ public class ActividadController {
 
         btnInscribirse.setVisible(true);
         btnInscribirse.setManaged(true);
-        btnInscribirse.setDisable(!loggedIn);
 
-        lblDebeIniciarSesion.setVisible(!loggedIn);
-        lblDebeIniciarSesion.setManaged(!loggedIn);
-
-        btnInscribirse.setOnAction(e -> {
-            if (!loggedIn) return;
-            btnInscribirse.setText("Inscrito ✓");
-            btnInscribirse.setStyle("-fx-background-color: #10b981;");
+        if (!loggedIn) {
             btnInscribirse.setDisable(true);
-        });
+            btnInscribirse.setText("Inscribirse a esta actividad");
+            btnInscribirse.setOnAction(null);
+
+            lblDebeIniciarSesion.setVisible(true);
+            lblDebeIniciarSesion.setManaged(true);
+            return;
+        }
+
+        lblDebeIniciarSesion.setVisible(false);
+        lblDebeIniciarSesion.setManaged(false);
+
+        if (actividad == null || actividad.getId() == null) return;
+
+        long userId = Sesion.getUsuarioActual().getId();
+        boolean inscrito = inscripcionDAO.estaInscrito(userId, actividad.getId());
+
+        if (inscrito) {
+            btnInscribirse.setText("Inscrito ✓");
+            btnInscribirse.setDisable(true);
+            btnInscribirse.setOnAction(null);
+        } else {
+            btnInscribirse.setText("Inscribirse a esta actividad");
+
+            long inscritos = inscripcionDAO.contarInscritos(actividad.getId());
+            boolean lleno = inscritos >= actividad.getAforo();
+            btnInscribirse.setDisable(lleno);
+
+            btnInscribirse.setOnAction(e -> {
+                long ahora = inscripcionDAO.contarInscritos(actividad.getId());
+                if (ahora >= actividad.getAforo()) {
+                    btnInscribirse.setDisable(true);
+                    return;
+                }
+
+                inscripcionDAO.inscribir(Sesion.getUsuarioActual(), actividad);
+
+                long nuevos = inscripcionDAO.contarInscritos(actividad.getId());
+                lblPlazas.setText(nuevos + " / " + actividad.getAforo() + " personas inscritas");
+                actualizarEstadoInscripcion();
+            });
+        }
+    }
+
+    private void actualizarMapaConActividadConReintento() {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(this::actualizarMapaConActividadConReintento);
+            return;
+        }
+
+        if (actividad == null) return;
+        if (mapEngine == null) return;
+        if (!mapaListo) return;
+        if (mapaActualizado) return;
+
+        boolean existePlanifyMap = false;
+        try {
+            Object res = mapEngine.executeScript("typeof planifyMap !== 'undefined'");
+            if (res instanceof Boolean b) existePlanifyMap = b;
+        } catch (Exception ignored) {}
+
+        if (!existePlanifyMap) {
+            reintentarMapa();
+            return;
+        }
+
+        if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
+            try {
+                mapEngine.executeScript("planifyMap.setLocation(40.4168, -3.7038, 12);");
+                mapaActualizado = true;
+            } catch (Exception e) {
+                reintentarMapa();
+            }
+            return;
+        }
+
+        double lat = actividad.getLatitud().doubleValue();
+        double lon = actividad.getLongitud().doubleValue();
+
+        try {
+            String jsCall = "planifyMap.setLocation(" + lat + ", " + lon + ", 16);";
+            mapEngine.executeScript(jsCall);
+            mapaActualizado = true;
+        } catch (Exception e) {
+            reintentarMapa();
+        }
+    }
+
+    private void reintentarMapa() {
+        if (intentosMapa >= MAX_INTENTOS_MAPA) return;
+        intentosMapa++;
+
+        PauseTransition pt = new PauseTransition(Duration.millis(180));
+        pt.setOnFinished(e -> actualizarMapaConActividadConReintento());
+        pt.play();
     }
 
     private void configurarBotonDenunciarSegunSesionYActividad() {
@@ -317,13 +326,16 @@ public class ActividadController {
 
     private void volverAInicio() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
-            Parent root = loader.load();
             Stage stage = (Stage) webViewMap.getScene().getWindow();
+            Parent root = ViewUtil.loadFXML(getClass(), "/vistas/Inicio.fxml");
+
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            var css = getClass().getResource("/css/styles.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+
             stage.setScene(scene);
             stage.setTitle("PlanifyPlus - Inicio");
+            WindowUtil.forceMaximize(stage);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

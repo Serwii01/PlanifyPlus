@@ -1,3 +1,4 @@
+// src/main/java/com/planify/planifyplus/controller/PerfilController.java
 package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.InscripcionDAO;
@@ -5,9 +6,9 @@ import com.planify.planifyplus.dao.UsuarioDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import com.planify.planifyplus.util.Sesion;
-
+import com.planify.planifyplus.util.ViewUtil;
+import com.planify.planifyplus.util.WindowUtil;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -15,7 +16,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -131,27 +131,26 @@ public class PerfilController {
     }
 
     @FXML
-    private void onIrInicio() {
-        cambiarEscena("/vistas/Inicio.fxml");
-    }
+    private void onIrInicio() { cambiarEscena("/vistas/Inicio.fxml"); }
 
     @FXML
-    private void onIrConfPerfil() {
-        cambiarEscena("/vistas/ConfPerfil.fxml");
-    }
+    private void onIrConfPerfil() { cambiarEscena("/vistas/ConfPerfil.fxml"); }
 
     @FXML
-    private void onExplorarActividades() {
-        cambiarEscena("/vistas/Inicio.fxml");
-    }
+    private void onExplorarActividades() { cambiarEscena("/vistas/Inicio.fxml"); }
 
     private void cambiarEscena(String rutaFXML) {
         try {
             Stage stage = (Stage) btnHomePerfil.getScene().getWindow();
-            Scene nuevaScene = new Scene(FXMLLoader.load(getClass().getResource(rutaFXML)));
-            stage.setScene(nuevaScene);
-            stage.centerOnScreen();
-        } catch (IOException e) {
+            var root = ViewUtil.loadFXML(getClass(), rutaFXML);
+
+            Scene scene = new Scene(root);
+            var css = getClass().getResource("/css/styles.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+
+            stage.setScene(scene);
+            WindowUtil.forceMaximize(stage);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

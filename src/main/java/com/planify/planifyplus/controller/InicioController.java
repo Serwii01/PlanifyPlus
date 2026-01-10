@@ -4,8 +4,9 @@ import com.planify.planifyplus.dao.ActividadDAO;
 import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.util.Sesion;
+import com.planify.planifyplus.util.ViewUtil;
+import com.planify.planifyplus.util.WindowUtil;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -28,21 +29,21 @@ public class InicioController {
     @FXML private VBox contenedorComunidad, contenedorUsuario;
     @FXML private ScrollPane scrollActividadesComunidad, scrollActividadesUsuario;
     @FXML private Label lblAdminBadge;
-    @FXML private Label lblTituloPanelDerecho; // Label del título "Mis actividades creadas"
+    @FXML private Label lblTituloPanelDerecho;
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
     public void initialize() {
-        logoImage.setImage(new Image(getClass().getResource("/img/descarga.png").toExternalForm()));
+        var img = getClass().getResource("/img/descarga.png");
+        if (img != null) logoImage.setImage(new Image(img.toExternalForm()));
+
         cargarActividadesComunidad();
 
         boolean loggedIn = Sesion.getUsuarioActual() != null;
         updateUIForSession(loggedIn);
 
-        if (loggedIn) {
-            cargarActividadesUsuario();
-        }
+        if (loggedIn) cargarActividadesUsuario();
 
         configurarUIRol();
 
@@ -50,17 +51,10 @@ public class InicioController {
         VBox.setVgrow(scrollActividadesUsuario, Priority.ALWAYS);
     }
 
-    // ============================================================
-    // CARGA DE ACTIVIDADES
-    // ============================================================
-
     private void cargarActividadesComunidad() {
         contenedorComunidad.getChildren().clear();
 
-        Long idUsuarioActual = null;
-        if (Sesion.getUsuarioActual() != null) {
-            idUsuarioActual = Sesion.getUsuarioActual().getId();
-        }
+        Long idUsuarioActual = (Sesion.getUsuarioActual() != null) ? Sesion.getUsuarioActual().getId() : null;
 
         List<ActividadDTO> predeterminadas = actividadDAO.obtenerPredeterminadas();
         for (ActividadDTO act : predeterminadas) {
@@ -69,9 +63,7 @@ public class InicioController {
 
         List<ActividadDTO> creadasUsuarios = actividadDAO.obtenerNoPredeterminadas();
         for (ActividadDTO act : creadasUsuarios) {
-            if (idUsuarioActual != null &&
-                    act.getCreador() != null &&
-                    act.getCreador().getId() == idUsuarioActual) {
+            if (idUsuarioActual != null && act.getCreador() != null && act.getCreador().getId() == idUsuarioActual) {
                 continue;
             }
             contenedorComunidad.getChildren().add(crearCardActividad(act));
@@ -89,7 +81,6 @@ public class InicioController {
         }
     }
 
-    // actividades denunciadas para el admin
     private void cargarActividadesDenunciadas() {
         contenedorUsuario.getChildren().clear();
         List<ActividadDTO> denunciadas = actividadDAO.obtenerDenunciadasOrdenadas();
@@ -98,23 +89,14 @@ public class InicioController {
         }
     }
 
-    // decide qué cargar en el panel derecho según el rol
     private void cargarPanelDerechoSegunRol() {
         if (!Sesion.haySesion()) {
             contenedorUsuario.getChildren().clear();
             return;
         }
-
-        if (Sesion.esAdmin()) {
-            cargarActividadesDenunciadas();
-        } else {
-            cargarActividadesUsuario();
-        }
+        if (Sesion.esAdmin()) cargarActividadesDenunciadas();
+        else cargarActividadesUsuario();
     }
-
-    // ============================================================
-    // CREACIÓN DE LA CARD CON BOTONES DE EDITAR Y ELIMINAR
-    // ============================================================
 
     private Pane crearCardActividad(ActividadDTO act) {
         VBox vbox = new VBox(12);
@@ -173,16 +155,16 @@ public class InicioController {
 
         boolean esAdmin = Sesion.esAdmin();
 
-        // ====== BLOQUE CORREGIDO (antes tenías un else suelto) ======
         if (esCreadorUsuario) {
 
-            Button btnEditar = new Button("✏️");
+            // ✅ BOTÓN AZUL: "Editar"
+            Button btnEditar = new Button("Editar");
             btnEditar.setStyle(
                     "-fx-background-color: #3B82F6;" +
                             "-fx-text-fill: white;" +
-                            "-fx-background-radius: 50%;" +
-                            "-fx-font-size: 16;" +
-                            "-fx-padding: 8 12 8 12;" +
+                            "-fx-background-radius: 18;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-padding: 6 18 6 18;" +
                             "-fx-cursor: hand;"
             );
             btnEditar.setOnAction(e -> {
@@ -190,13 +172,14 @@ public class InicioController {
                 onEditarActividad(act);
             });
 
-            Button btnEliminar = new Button("🗑️");
+            // ✅ BOTÓN ROJO: "Eliminar"
+            Button btnEliminar = new Button("Eliminar");
             btnEliminar.setStyle(
                     "-fx-background-color: #DC2626;" +
                             "-fx-text-fill: white;" +
-                            "-fx-background-radius: 50%;" +
-                            "-fx-font-size: 16;" +
-                            "-fx-padding: 8 12 8 12;" +
+                            "-fx-background-radius: 18;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-padding: 6 18 6 18;" +
                             "-fx-cursor: hand;"
             );
             btnEliminar.setOnAction(e -> {
@@ -208,7 +191,6 @@ public class InicioController {
 
         } else if (esAdmin) {
 
-            // Admin: solo botón Eliminar (sin Inscribirse)
             Button btnEliminarAdmin = new Button("Eliminar");
             btnEliminarAdmin.setStyle(
                     "-fx-background-color: #DC2626;" +
@@ -222,13 +204,12 @@ public class InicioController {
                 e.consume();
                 onEliminarActividad(act);
             });
+
             hBoton.getChildren().add(btnEliminarAdmin);
 
         } else {
 
-            // Botón Inscribirse para actividades de otros usuarios (usuario normal)
             Button btnInscribir = new Button("Inscribirse");
-
             btnInscribir.setStyle(
                     "-fx-background-color: #3B82F6;" +
                             "-fx-text-fill: white;" +
@@ -239,7 +220,11 @@ public class InicioController {
 
             if (!Sesion.haySesion()) {
                 btnInscribir.setText("Inicia sesión");
-                btnInscribir.setDisable(true);
+                btnInscribir.setDisable(false);
+                btnInscribir.setOnAction(e -> {
+                    e.consume();
+                    irAVista("Login.fxml");
+                });
             } else {
                 boolean inscrito = inscripcionDAO.estaInscrito(Sesion.getIdUsuario(), act.getId());
                 btnInscribir.setText(inscrito ? "Inscrito" : "Inscribirse");
@@ -252,9 +237,8 @@ public class InicioController {
                     long userId = Sesion.getIdUsuario();
                     boolean ya = inscripcionDAO.estaInscrito(userId, act.getId());
 
-                    if (ya) {
-                        inscripcionDAO.cancelar(userId, act.getId());
-                    } else {
+                    if (ya) inscripcionDAO.cancelar(userId, act.getId());
+                    else {
                         long ahora = inscripcionDAO.contarInscritos(act.getId());
                         if (ahora >= act.getAforo()) return;
                         inscripcionDAO.inscribir(Sesion.getUsuarioActual(), act);
@@ -267,24 +251,6 @@ public class InicioController {
 
             hBoton.getChildren().add(btnInscribir);
         }
-        // ====== FIN BLOQUE CORREGIDO ======
-
-        // Esto lo dejo tal cual lo tenías (aunque duplica botón admin, pero no rompe compilación)
-        if (Sesion.esAdmin() && !esCreadorUsuario) {
-            Button btnEliminarAdmin = new Button("Eliminar");
-            btnEliminarAdmin.setStyle(
-                    "-fx-background-color: #DC2626;" +
-                            "-fx-text-fill: white;" +
-                            "-fx-background-radius: 18;" +
-                            "-fx-font-size: 14;" +
-                            "-fx-padding: 6 18 6 18;"
-            );
-            btnEliminarAdmin.setOnAction(e -> {
-                e.consume();
-                onEliminarActividad(act);
-            });
-            hBoton.getChildren().add(btnEliminarAdmin);
-        }
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
         vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
@@ -294,7 +260,7 @@ public class InicioController {
 
     private void onEditarActividad(ActividadDTO actividad) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/crearActividad.fxml"));
+            var loader = ViewUtil.loaderFXML(getClass(), "/vistas/crearActividad.fxml");
             Parent root = loader.load();
 
             CrearActividadController controller = loader.getController();
@@ -302,8 +268,13 @@ public class InicioController {
 
             Stage stage = (Stage) logoImage.getScene().getWindow();
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            var css = getClass().getResource("/css/styles.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+
             stage.setScene(scene);
+            WindowUtil.forceMaximize(stage);
+
         } catch (Exception ex) {
             ex.printStackTrace();
             mostrarError("No se pudo abrir la pantalla de edición");
@@ -314,10 +285,7 @@ public class InicioController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Eliminar actividad");
         alert.setHeaderText("¿Eliminar tu actividad?");
-        alert.setContentText(
-                "Esta acción no se puede deshacer.\n\n" +
-                        "La actividad \"" + act.getTitulo() + "\" será eliminada."
-        );
+        alert.setContentText("Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada.");
 
         ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
@@ -329,46 +297,36 @@ public class InicioController {
             cargarActividadesComunidad();
             cargarPanelDerechoSegunRol();
 
-            Alert confirmacion = new Alert(Alert.AlertType.INFORMATION);
-            confirmacion.setTitle("Actividad eliminada");
-            confirmacion.setHeaderText(null);
-            confirmacion.setContentText("La actividad \"" + act.getTitulo() + "\" ha sido eliminada correctamente.");
-            confirmacion.showAndWait();
+            Alert ok = new Alert(Alert.AlertType.INFORMATION);
+            ok.setTitle("Actividad eliminada");
+            ok.setHeaderText(null);
+            ok.setContentText("La actividad \"" + act.getTitulo() + "\" ha sido eliminada correctamente.");
+            ok.showAndWait();
         }
     }
 
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
     private void abrirDetalleActividad(ActividadDTO actividad) {
-        System.out.println("🔍 DEBUG - Actividad completa:");
-        System.out.println("  Título: " + actividad.getTitulo());
-        System.out.println("  Lat: " + actividad.getLatitud());
-        System.out.println("  Lon: " + actividad.getLongitud());
-        System.out.println("  Ubicación: " + actividad.getUbicacion());
-
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/Actividad.fxml"));
+            var loader = ViewUtil.loaderFXML(getClass(), "/vistas/Actividad.fxml");
             Parent root = loader.load();
+
             ActividadController controller = loader.getController();
             controller.setActividad(actividad);
+
             Stage stage = (Stage) logoImage.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.getScene().getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.show();
+            Scene scene = new Scene(root);
+
+            var css = getClass().getResource("/css/styles.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+
+            stage.setScene(scene);
+            WindowUtil.forceMaximize(stage);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private String capitalize(String str) {
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
-    }
+    private String capitalize(String str) { return str.substring(0, 1).toUpperCase() + str.substring(1); }
 
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
@@ -376,10 +334,10 @@ public class InicioController {
                 : "#bbf7d0";
     }
 
-    @FXML private void handleRegister() { irAVista("registro.fxml"); }
-    @FXML private void handleLogin() { irAVista("login.fxml"); }
+    @FXML private void handleRegister() { irAVista("Registro.fxml"); }
+    @FXML private void handleLogin() { irAVista("Login.fxml"); }
     @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
-    @FXML private void handlePerfil() { irAVista("perfil.fxml"); }
+    @FXML private void handlePerfil() { irAVista("Perfil.fxml"); }
 
     @FXML
     private void handleLogout() {
@@ -392,12 +350,15 @@ public class InicioController {
 
     private void irAVista(String fxml) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/" + fxml));
-            Parent root = loader.load();
             Stage stage = (Stage) logoImage.getScene().getWindow();
+            Parent root = ViewUtil.loadFXML(getClass(), "/vistas/" + fxml);
+
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            var css = getClass().getResource("/css/styles.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+
             stage.setScene(scene);
+            WindowUtil.forceMaximize(stage);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -418,15 +379,15 @@ public class InicioController {
         lblNoSesion.setVisible(!loggedIn);
 
         if (loggedIn && Sesion.getUsuarioActual() != null) {
-            lblUser.setText(Sesion.getUsuarioActual().getNombre().substring(0, 1));
-            lblCiudad.setText(Sesion.getUsuarioActual().getCiudad());
-        } else {
+            lblUser.setText(Sesion.getUsuarioActual().getNombre()); // aqui te pilla el nombre con el que te logueaste
+            lblCiudad.setText(Sesion.getUsuarioActual().getCiudad()); // aqui te pilla la ciudad
+        }
+        else {
             lblUser.setText("");
             lblCiudad.setText("");
             contenedorUsuario.getChildren().clear();
         }
 
-        // cargo el panel derecho según el rol
         cargarPanelDerechoSegunRol();
     }
 
@@ -444,16 +405,10 @@ public class InicioController {
             lblAdminBadge.setManaged(esAdmin);
         }
 
-        // cambio el título del panel derecho
         if (lblTituloPanelDerecho != null) {
-            if (esAdmin) {
-                lblTituloPanelDerecho.setText("Actividades denunciadas");
-            } else {
-                lblTituloPanelDerecho.setText("Mis Actividades Creadas");
-            }
+            lblTituloPanelDerecho.setText(esAdmin ? "Actividades denunciadas" : "Mis Actividades Creadas");
         }
 
-        // oculto el boton de crear actividad para admins
         if (btnCrearActividad != null) {
             btnCrearActividad.setVisible(Sesion.haySesion() && !esAdmin);
             btnCrearActividad.setManaged(Sesion.haySesion() && !esAdmin);
@@ -480,10 +435,7 @@ public class InicioController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Eliminar actividad");
         alert.setHeaderText("¿Eliminar actividad?");
-        alert.setContentText(
-                "Esta acción no se puede deshacer.\n\n" +
-                        "La actividad \"" + act.getTitulo() + "\" será eliminada."
-        );
+        alert.setContentText("Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada.");
 
         ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
@@ -493,12 +445,16 @@ public class InicioController {
         if (resultado == btnEliminar) {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
-
             if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
-
-            //y recarga el panel derecho según el rol
             cargarPanelDerechoSegunRol();
-
         }
+    }
+
+    private void mostrarError(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 }

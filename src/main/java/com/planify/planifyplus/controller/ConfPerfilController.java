@@ -3,6 +3,7 @@ package com.planify.planifyplus.controller;
 import com.planify.planifyplus.dao.UsuarioDAO;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import com.planify.planifyplus.util.Sesion;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -38,7 +40,6 @@ public class ConfPerfilController {
 
     @FXML
     private void initialize() {
-        // Rellenar combo de ciudades (pon las que queráis)
         cmbCiudad.getItems().setAll(
                 "Madrid",
                 "Barcelona",
@@ -48,7 +49,6 @@ public class ConfPerfilController {
                 "Palma de Mallorca"
         );
 
-        // Cargar datos del usuario en sesión
         UsuarioDTO u = Sesion.getUsuarioActual();
         if (u != null) {
             txtNombre.setText(u.getNombre());
@@ -60,7 +60,6 @@ public class ConfPerfilController {
         }
     }
 
-    // Botón GUARDAR CAMBIOS
     @FXML
     private void onGuardarCambios(ActionEvent event) {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
@@ -88,7 +87,6 @@ public class ConfPerfilController {
             return;
         }
 
-        // Comprobar si el email ya existe en OTRO usuario distinto
         UsuarioDTO otro = usuarioDAO.buscarPorEmail(email);
         if (otro != null && otro.getId() != usuario.getId()) {
             mostrarAlerta("Correo ya en uso",
@@ -97,7 +95,6 @@ public class ConfPerfilController {
             return;
         }
 
-        // Aplicar cambios al usuario de sesión
         usuario.setNombre(nombre);
         usuario.setEmail(email);
         usuario.setContrasena(contrasena);
@@ -121,24 +118,21 @@ public class ConfPerfilController {
         }
     }
 
-    // Botón CANCELAR -> vuelve al perfil sin guardar
     @FXML
     private void onCancelar(ActionEvent event) {
         irAPerfil(event);
     }
 
-    // Botón de la casa -> va al Inicio
     @FXML
     private void onIrInicio(ActionEvent event) {
         cambiarEscena("/vistas/Inicio.fxml", event);
     }
 
-    // Volver a Perfil
     private void irAPerfil(ActionEvent event) {
         cambiarEscena("/vistas/Perfil.fxml", event);
     }
 
-    // Método genérico para cambiar de escena SIN lanzar IOException
+    // ✅ Método genérico: cambia escena + FULL SCREEN REAL
     private void cambiarEscena(String fxml, ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
@@ -148,8 +142,21 @@ public class ConfPerfilController {
                     .getScene()
                     .getWindow();
 
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+
+            // ✅ si usas CSS global
+            try {
+                scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            } catch (Exception ignored) {}
+
+            stage.setScene(scene);
+
+            // ✅ Pantalla completa real (no solo maximized)
+            stage.setFullScreenExitHint("");
+            stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+
             stage.show();
+            Platform.runLater(() -> stage.setFullScreen(true));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -167,4 +174,3 @@ public class ConfPerfilController {
         alerta.showAndWait();
     }
 }
-

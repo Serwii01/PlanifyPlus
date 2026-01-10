@@ -1,11 +1,14 @@
+// src/main/java/com/planify/planifyplus/controller/CrearActividadController.java
 package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.ActividadDAO;
+import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.TipoActividad;
 import com.planify.planifyplus.util.Sesion;
+import com.planify.planifyplus.util.ViewUtil;
+import com.planify.planifyplus.util.WindowUtil;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -35,15 +38,14 @@ public class CrearActividadController {
     @FXML private Label lblTituloPagina;
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
+    private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
+
     private ActividadDTO actividadAEditar = null;
     private WebEngine webEngine;
 
     @FXML
     public void initialize() {
-        // Cargar tipos de actividad
-        cmbTipo.getItems().addAll("DEPORTIVA", "CULTURAL", "TALLERES");
-
-        // Inicializar WebView
+        cmbTipo.getItems().addAll("DEPORTIVA", "CULTURAL", "TALLER");
         inicializarBuscadorMapa();
     }
 
@@ -51,24 +53,20 @@ public class CrearActividadController {
         webEngine = webViewBuscador.getEngine();
         webEngine.setJavaScriptEnabled(true);
 
-        // Cargar el HTML del buscador
         String htmlContent = getClass().getResource("/API/map-buscador-ubicacion.html").toExternalForm();
         webEngine.load(htmlContent);
 
-        // Esperar a que se cargue para inyectar el puente Java
         webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
             if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
                 JSObject window = (JSObject) webEngine.executeScript("window");
                 window.setMember("javaApp", new JavaScriptBridge());
 
-                // Si hay ciudad en el contexto, pasarla al buscador
                 if (txtCiudad.getText() != null && !txtCiudad.getText().trim().isEmpty()) {
                     webEngine.executeScript("setCityContext('" + txtCiudad.getText() + "')");
                 }
             }
         });
 
-        // Listener para actualizar el contexto de ciudad
         txtCiudad.textProperty().addListener((obs, old, newVal) -> {
             if (webEngine != null && newVal != null && !newVal.trim().isEmpty()) {
                 webEngine.executeScript("setCityContext('" + newVal + "')");
@@ -76,16 +74,12 @@ public class CrearActividadController {
         });
     }
 
-    /**
-     * Puente JavaScript para recibir la ubicación seleccionada
-     */
     public class JavaScriptBridge {
         public void onLocationSelected(String displayName, double lat, double lon) {
             javafx.application.Platform.runLater(() -> {
                 txtUbicacion.setText(displayName);
                 txtLatitud.setText(String.valueOf(lat));
                 txtLongitud.setText(String.valueOf(lon));
-                System.out.println("✓ Ubicación recibida: " + displayName + " (" + lat + ", " + lon + ")");
             });
         }
     }
@@ -105,72 +99,27 @@ public class CrearActividadController {
         txtCiudad.setText(actividad.getCiudad());
         txtAforo.setText(String.valueOf(actividad.getAforo()));
 
-        // Cargar coordenadas si existen
-        if (actividad.getLatitud() != null) {
-            txtLatitud.setText(actividad.getLatitud().toString());
-        }
-        if (actividad.getLongitud() != null) {
-            txtLongitud.setText(actividad.getLongitud().toString());
-        }
+        if (actividad.getLatitud() != null) txtLatitud.setText(actividad.getLatitud().toString());
+        if (actividad.getLongitud() != null) txtLongitud.setText(actividad.getLongitud().toString());
 
-        if (lblTituloPagina != null) {
-            lblTituloPagina.setText("Editar Actividad");
-        }
-        if (btnGuardar != null) {
-            btnGuardar.setText("Actualizar Actividad");
-        }
+        if (lblTituloPagina != null) lblTituloPagina.setText("Editar Actividad");
+        if (btnGuardar != null) btnGuardar.setText("Actualizar Actividad");
     }
 
     @FXML
     private void handleGuardarActividad() {
-        // Validaciones
-        if (txtTitulo.getText().trim().isEmpty()) {
-            mostrarError("El título es obligatorio");
-            return;
-        }
-
-        if (txtDescripcion.getText().trim().isEmpty()) {
-            mostrarError("La descripción es obligatoria");
-            return;
-        }
-
-        if (dpFecha.getValue() == null) {
-            mostrarError("La fecha es obligatoria");
-            return;
-        }
-
-        if (txtHora.getText().trim().isEmpty()) {
-            mostrarError("La hora es obligatoria");
-            return;
-        }
-
-        if (cmbTipo.getValue() == null) {
-            mostrarError("Debes seleccionar un tipo de actividad");
-            return;
-        }
-
-        if (txtUbicacion.getText().trim().isEmpty()) {
-            mostrarError("Debes seleccionar una ubicación del buscador");
-            return;
-        }
-
-        if (txtCiudad.getText().trim().isEmpty()) {
-            mostrarError("La ciudad es obligatoria");
-            return;
-        }
-
-        if (txtAforo.getText().trim().isEmpty()) {
-            mostrarError("El aforo es obligatorio");
-            return;
-        }
+        if (txtTitulo.getText().trim().isEmpty()) { mostrarError("El título es obligatorio"); return; }
+        if (txtDescripcion.getText().trim().isEmpty()) { mostrarError("La descripción es obligatoria"); return; }
+        if (dpFecha.getValue() == null) { mostrarError("La fecha es obligatoria"); return; }
+        if (txtHora.getText().trim().isEmpty()) { mostrarError("La hora es obligatoria"); return; }
+        if (cmbTipo.getValue() == null) { mostrarError("Debes seleccionar un tipo de actividad"); return; }
+        if (txtUbicacion.getText().trim().isEmpty()) { mostrarError("Debes seleccionar una ubicación del buscador"); return; }
+        if (txtCiudad.getText().trim().isEmpty()) { mostrarError("La ciudad es obligatoria"); return; }
+        if (txtAforo.getText().trim().isEmpty()) { mostrarError("El aforo es obligatorio"); return; }
 
         try {
-            // Parsear hora
             String[] horaPartes = txtHora.getText().split(":");
-            if (horaPartes.length != 2) {
-                mostrarError("Formato de hora inválido. Usa HH:mm (ej. 18:30)");
-                return;
-            }
+            if (horaPartes.length != 2) { mostrarError("Formato de hora inválido. Usa HH:mm (ej. 18:30)"); return; }
 
             int hora = Integer.parseInt(horaPartes[0]);
             int minutos = Integer.parseInt(horaPartes[1]);
@@ -183,13 +132,12 @@ public class CrearActividadController {
             LocalDateTime fechaHora = dpFecha.getValue().atTime(hora, minutos);
 
             int aforo = Integer.parseInt(txtAforo.getText());
-            if (aforo <= 0) {
-                mostrarError("El aforo debe ser mayor que 0");
-                return;
-            }
+            if (aforo <= 0) { mostrarError("El aforo debe ser mayor que 0"); return; }
+
+            boolean esEdicion = (actividadAEditar != null);
 
             ActividadDTO actividad;
-            if (actividadAEditar != null) {
+            if (esEdicion) {
                 actividad = actividadAEditar;
             } else {
                 actividad = new ActividadDTO();
@@ -198,7 +146,6 @@ public class CrearActividadController {
                 actividad.setCreadoEn(LocalDateTime.now());
             }
 
-            // Actualizar campos
             actividad.setTitulo(txtTitulo.getText().trim());
             actividad.setDescripcion(txtDescripcion.getText().trim());
             actividad.setFechaHoraInicio(fechaHora);
@@ -207,22 +154,23 @@ public class CrearActividadController {
             actividad.setCiudad(txtCiudad.getText().trim());
             actividad.setAforo(aforo);
 
-            // Guardar coordenadas si existen
-            if (!txtLatitud.getText().trim().isEmpty()) {
-                actividad.setLatitud(new BigDecimal(txtLatitud.getText()));
-            }
-            if (!txtLongitud.getText().trim().isEmpty()) {
-                actividad.setLongitud(new BigDecimal(txtLongitud.getText()));
-            }
+            if (!txtLatitud.getText().trim().isEmpty()) actividad.setLatitud(new BigDecimal(txtLatitud.getText()));
+            if (!txtLongitud.getText().trim().isEmpty()) actividad.setLongitud(new BigDecimal(txtLongitud.getText()));
 
             actividadDAO.guardar(actividad);
+
+            if (!esEdicion && Sesion.haySesion() && !Sesion.esAdmin()) {
+                if (actividad.getId() != null) {
+                    inscripcionDAO.inscribir(Sesion.getUsuarioActual(), actividad);
+                }
+            }
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Éxito");
             alert.setHeaderText(null);
-            alert.setContentText(actividadAEditar != null
+            alert.setContentText(esEdicion
                     ? "Actividad actualizada correctamente"
-                    : "Actividad creada correctamente");
+                    : "Actividad creada correctamente (ya estás inscrito)");
             alert.showAndWait();
 
             irAInicio();
@@ -236,18 +184,19 @@ public class CrearActividadController {
     }
 
     @FXML
-    private void handleVolver() {
-        irAInicio();
-    }
+    private void handleVolver() { irAInicio(); }
 
     private void irAInicio() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/inicio.fxml"));
-            Parent root = loader.load();
             Stage stage = (Stage) btnGuardar.getScene().getWindow();
+            Parent root = ViewUtil.loadFXML(getClass(), "/vistas/Inicio.fxml");
+
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            var css = getClass().getResource("/css/styles.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+
             stage.setScene(scene);
+            WindowUtil.forceMaximize(stage);
         } catch (Exception e) {
             e.printStackTrace();
             mostrarError("No se pudo volver a la pantalla de inicio");

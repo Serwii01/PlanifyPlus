@@ -10,3 +10,30 @@
 .root {
     -fx-font-family: 'San Francisco';
 }
+/* ===============================
+   ALERTAS PLANIFY
+   =============================== */
+
+.planify-alert {
+    -fx-background-color: #ffffff;
+    -fx-padding: 20;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.planify-alert .content {
+    -fx-font-size: 14px;
+    -fx-text-fill: #1f2937;
+}
+
+.planify-alert-button {
+    -fx-background-color: #3B82F6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 18;
+    -fx-padding: 8 24;
+}
+
+.planify-alert-button:hover {
+    -fx-background-color: #2563EB;
+}
+
