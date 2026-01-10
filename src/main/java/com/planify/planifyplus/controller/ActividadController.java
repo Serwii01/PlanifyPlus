@@ -1,11 +1,9 @@
 package com.planify.planifyplus.controller;
 
-<<<<<<< HEAD
 import com.planify.planifyplus.dao.InscripcionDAO;
-=======
 import com.planify.planifyplus.dao.ActividadDAO;
 import com.planify.planifyplus.dao.DenunciaActividadDAO;
->>>>>>> origin/main
+
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.UsuarioDTO;
 import com.planify.planifyplus.util.Sesion;
@@ -20,14 +18,9 @@ import javafx.scene.control.Label;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-import java.math.BigDecimal;
+
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-<<<<<<< HEAD
-import java.util.Timer;
-import java.util.TimerTask;
-=======
->>>>>>> origin/main
 
 public class ActividadController {
 
@@ -59,26 +52,21 @@ public class ActividadController {
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private final DenunciaActividadDAO denunciaDAO = new DenunciaActividadDAO();
-
     private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
     @FXML
     public void initialize() {
         Platform.runLater(this::initMap);
         btnVolver.setOnAction(e -> volverAInicio());
-<<<<<<< HEAD
 
-        webEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
-            if (state == Worker.State.SUCCEEDED) {
-                webEngine.executeScript("window.onWebViewReady();");
-                mapaCargadoYListo = true;
-
-=======
+        // Config inicial (por si entra sin setActividad todavía)
         configurarInscripcionSegunSesion();
+        configurarBotonDenunciarSegunSesionYActividad();
     }
 
     private void initMap() {
         mapEngine = webViewMap.getEngine();
+
         String html = """
             <!DOCTYPE html>
             <html>
@@ -122,7 +110,6 @@ public class ActividadController {
             if (state == Worker.State.SUCCEEDED) {
                 mapaListo = true;
                 System.out.println("✅ Mapa listo");
->>>>>>> origin/main
                 if (actividad != null) {
                     actualizarMapaConActividad();
                 }
@@ -135,50 +122,37 @@ public class ActividadController {
         this.actividad = actividad;
         if (actividad == null) return;
 
-<<<<<<< HEAD
-=======
         // UI
->>>>>>> origin/main
         lblTitulo.setText(actividad.getTitulo());
         lblDescripcion.setText(actividad.getDescripcion());
 
         String tipoStr = actividad.getTipo().toString();
         lblTipo.setText(tipoStr.substring(0, 1).toUpperCase() + tipoStr.substring(1).toLowerCase());
-<<<<<<< HEAD
 
         lblFecha.setText(actividad.getFechaHoraInicio().format(formatoFecha));
         lblHora.setText(actividad.getFechaHoraInicio().format(formatoHora));
 
-        String ubicacion = actividad.getUbicacion() != null ? actividad.getUbicacion() : "";
-        String ciudad = actividad.getCiudad() != null ? actividad.getCiudad() : "";
-        lblUbicacionCaja.setText(ubicacion);
-        lblCiudadCaja.setText(ciudad);
+        lblUbicacionCaja.setText(actividad.getUbicacion() != null ? actividad.getUbicacion() : "Sin ubicación");
+        lblCiudadCaja.setText(actividad.getCiudad() != null ? actividad.getCiudad() : "Sin ciudad");
 
+        System.out.println("📍 Lat: " + (actividad.getLatitud() != null ? actividad.getLatitud() : "NULL") +
+                " Lon: " + (actividad.getLongitud() != null ? actividad.getLongitud() : "NULL"));
+
+        // Inscripciones + plazas
         actualizarPlazas();
         configurarInscripcionSegunSesion();
 
-        if (mapaCargadoYListo) {
-=======
-        lblFecha.setText(actividad.getFechaHoraInicio().format(formatoFecha));
-        lblHora.setText(actividad.getFechaHoraInicio().format(formatoHora));
-        lblUbicacionCaja.setText(actividad.getUbicacion() != null ? actividad.getUbicacion() : "Sin ubicación");
-        lblCiudadCaja.setText(actividad.getCiudad() != null ? actividad.getCiudad() : "Sin ciudad");
-        lblPlazas.setText("1 / " + actividad.getAforo() + " personas inscritas");
+        // Denuncias
+        configurarBotonDenunciarSegunSesionYActividad();
 
-        System.out.println("📍 Lat: " + (actividad.getLatitud() != null ? actividad.getLatitud() : "NULL") +
-                          " Lon: " + (actividad.getLongitud() != null ? actividad.getLongitud() : "NULL"));
-
+        // Mapa
         mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state == Worker.State.SUCCEEDED && !mapaActualizado) {
                 actualizarMapaConActividad();
             }
         });
 
-        configurarInscripcionSegunSesion();
-        configurarBotonDenunciarSegunSesionYActividad();
-        
         if (mapaListo) {
->>>>>>> origin/main
             actualizarMapaConActividad();
         }
     }
@@ -197,6 +171,18 @@ public class ActividadController {
 
     private void configurarInscripcionSegunSesion() {
         boolean loggedIn = Sesion.getUsuarioActual() != null;
+
+        // ADMIN NO SE INSCRIBE (DE IVAN)
+        if (Sesion.esAdmin()) {
+            btnInscribirse.setVisible(false);
+            btnInscribirse.setManaged(false);
+            lblDebeIniciarSesion.setVisible(false);
+            lblDebeIniciarSesion.setManaged(false);
+            return;
+        }
+
+        btnInscribirse.setVisible(true);
+        btnInscribirse.setManaged(true);
 
         btnInscribirse.setDisable(!loggedIn);
         lblDebeIniciarSesion.setVisible(!loggedIn);
@@ -243,34 +229,6 @@ public class ActividadController {
             return;
         }
 
-<<<<<<< HEAD
-        String latStr = String.format(Locale.US, "%.6f", actividad.getLatitud().doubleValue());
-        String lngStr = String.format(Locale.US, "%.6f", actividad.getLongitud().doubleValue());
-
-        String label = (actividad.getUbicacion() != null ? actividad.getUbicacion() : "Ubicación")
-                .replace("'", "\\'").replace("\"", "\\\"");
-
-        String script = String.format(
-                "if (typeof window.updateMapLocation === 'function') {" +
-                        "  window.updateMapLocation(%s, %s, '%s');" +
-                        "} else { console.error('updateMapLocation no definida'); }",
-                latStr, lngStr, label
-        );
-
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    try {
-                        webEngine.executeScript(script);
-                        System.out.println("-> Coordenadas inyectadas después de 200ms: " + latStr + ", " + lngStr);
-                    } catch (Exception e) {
-                        System.err.println("Error inyectando script: " + e.getMessage());
-                    }
-                });
-            }
-        }, 200);
-=======
         double lat = actividad.getLatitud().doubleValue();
         double lon = actividad.getLongitud().doubleValue();
         System.out.println("🎯 Mapa: " + lat + ", " + lon);
@@ -282,35 +240,6 @@ public class ActividadController {
         } catch (Exception e) {
             System.err.println("❌ JS Error: " + e.getMessage());
         }
-    }
-
-    private void configurarInscripcionSegunSesion() {
-        boolean loggedIn = Sesion.getUsuarioActual() != null;
-
-        // ADMIN NO SE INSCRIBE (DE IVAN)
-        if (Sesion.esAdmin()) {
-            btnInscribirse.setVisible(false);
-            btnInscribirse.setManaged(false);
-            lblDebeIniciarSesion.setVisible(false);
-            lblDebeIniciarSesion.setManaged(false);
-            return;
-        }
-
-        btnInscribirse.setVisible(true);
-        btnInscribirse.setManaged(true);
-        btnInscribirse.setDisable(!loggedIn);
-        lblDebeIniciarSesion.setVisible(!loggedIn);
-        if (loggedIn) {
-            lblDebeIniciarSesion.setManaged(false);
-        }
-
-        btnInscribirse.setOnAction(e -> {
-            if (!loggedIn) return;
-            btnInscribirse.setText("Inscrito ✓");
-            btnInscribirse.setStyle("-fx-background-color: #10b981;");
-            btnInscribirse.setDisable(true);
-        });
->>>>>>> origin/main
     }
 
     private void configurarBotonDenunciarSegunSesionYActividad() {

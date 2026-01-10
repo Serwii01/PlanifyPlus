@@ -14,15 +14,15 @@
         <!-- === CONFIGURACIÓN DE CONEXIÓN === -->
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
-<<<<<<< HEAD
+
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/planifyplus"/>
-=======
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3307/planifyplus"/>
+
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/planifyplus"/>
 
 
->>>>>>> origin/main
+
             <property name="jakarta.persistence.jdbc.user" value="root"/>
-            <property name="jakarta.persistence.jdbc.password" value="sergio"/>
+            <property name="jakarta.persistence.jdbc.password" value="root"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>

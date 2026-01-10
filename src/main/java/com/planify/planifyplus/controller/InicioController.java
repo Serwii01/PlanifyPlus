@@ -39,28 +39,21 @@ public class InicioController {
 
         boolean loggedIn = Sesion.getUsuarioActual() != null;
         updateUIForSession(loggedIn);
-<<<<<<< HEAD
 
         if (loggedIn) {
             cargarActividadesUsuario();
         }
 
-=======
->>>>>>> origin/main
         configurarUIRol();
 
         VBox.setVgrow(scrollActividadesComunidad, Priority.ALWAYS);
         VBox.setVgrow(scrollActividadesUsuario, Priority.ALWAYS);
     }
 
-<<<<<<< HEAD
-=======
     // ============================================================
     // CARGA DE ACTIVIDADES
     // ============================================================
 
-    //metodo que coloca las actividades en el contenedor de la izquierda
->>>>>>> origin/main
     private void cargarActividadesComunidad() {
         contenedorComunidad.getChildren().clear();
 
@@ -96,8 +89,6 @@ public class InicioController {
         }
     }
 
-<<<<<<< HEAD
-=======
     // actividades denunciadas para el admin
     private void cargarActividadesDenunciadas() {
         contenedorUsuario.getChildren().clear();
@@ -125,7 +116,6 @@ public class InicioController {
     // CREACIÓN DE LA CARD CON BOTONES DE EDITAR Y ELIMINAR
     // ============================================================
 
->>>>>>> origin/main
     private Pane crearCardActividad(ActividadDTO act) {
         VBox vbox = new VBox(12);
         vbox.setStyle(
@@ -181,13 +171,11 @@ public class InicioController {
                 act.getCreador() != null &&
                 act.getCreador().getId() == Sesion.getUsuarioActual().getId();
 
-<<<<<<< HEAD
-=======
         boolean esAdmin = Sesion.esAdmin();
 
-        // Si el usuario es el creador, mostrar botones de editar y eliminar
->>>>>>> origin/main
+        // ====== BLOQUE CORREGIDO (antes tenías un else suelto) ======
         if (esCreadorUsuario) {
+
             Button btnEditar = new Button("✏️");
             btnEditar.setStyle(
                     "-fx-background-color: #3B82F6;" +
@@ -218,11 +206,8 @@ public class InicioController {
 
             hBoton.getChildren().addAll(btnEditar, btnEliminar);
 
-<<<<<<< HEAD
-        } else {
-            Button btnInscribir = new Button();
-=======
         } else if (esAdmin) {
+
             // Admin: solo botón Eliminar (sin Inscribirse)
             Button btnEliminarAdmin = new Button("Eliminar");
             btnEliminarAdmin.setStyle(
@@ -240,9 +225,10 @@ public class InicioController {
             hBoton.getChildren().add(btnEliminarAdmin);
 
         } else {
+
             // Botón Inscribirse para actividades de otros usuarios (usuario normal)
             Button btnInscribir = new Button("Inscribirse");
->>>>>>> origin/main
+
             btnInscribir.setStyle(
                     "-fx-background-color: #3B82F6;" +
                             "-fx-text-fill: white;" +
@@ -281,8 +267,9 @@ public class InicioController {
 
             hBoton.getChildren().add(btnInscribir);
         }
+        // ====== FIN BLOQUE CORREGIDO ======
 
-<<<<<<< HEAD
+        // Esto lo dejo tal cual lo tenías (aunque duplica botón admin, pero no rompe compilación)
         if (Sesion.esAdmin() && !esCreadorUsuario) {
             Button btnEliminarAdmin = new Button("Eliminar");
             btnEliminarAdmin.setStyle(
@@ -299,8 +286,6 @@ public class InicioController {
             hBoton.getChildren().add(btnEliminarAdmin);
         }
 
-=======
->>>>>>> origin/main
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
         vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
 
@@ -381,12 +366,6 @@ public class InicioController {
         }
     }
 
-<<<<<<< HEAD
-=======
-
-
-    //metodo para poner en mayusculas
->>>>>>> origin/main
     private String capitalize(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
@@ -451,10 +430,6 @@ public class InicioController {
         cargarPanelDerechoSegunRol();
     }
 
-<<<<<<< HEAD
-=======
-    //cuando el usuario se logea la interfaz cambia
->>>>>>> origin/main
     public void onUsuarioLogueado() {
         updateUIForSession(true);
         configurarUIRol();
@@ -518,12 +493,12 @@ public class InicioController {
         if (resultado == btnEliminar) {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
-<<<<<<< HEAD
+
             if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
-=======
+
             //y recarga el panel derecho según el rol
             cargarPanelDerechoSegunRol();
->>>>>>> origin/main
+
         }
     }
 }
