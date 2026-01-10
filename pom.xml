@@ -39,6 +39,11 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
         <!-- BootstrapFX -->
         <dependency>
             <groupId>org.kordamp.bootstrapfx</groupId>
@@ -88,6 +93,16 @@
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Mapa: JXMapViewer2 -->
+        <dependency>
+            <groupId>org.jxmapviewer</groupId>
+            <artifactId>jxmapviewer2</artifactId>
+            <version>2.8</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>

@@ -13,6 +13,10 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;

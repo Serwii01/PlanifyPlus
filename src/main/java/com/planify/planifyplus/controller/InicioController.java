@@ -28,6 +28,7 @@ public class InicioController {
     @FXML private VBox contenedorComunidad, contenedorUsuario;
     @FXML private ScrollPane scrollActividadesComunidad, scrollActividadesUsuario;
     @FXML private Label lblAdminBadge;
+    @FXML private Label lblTituloPanelDerecho; // Label del título "Mis actividades creadas"
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
@@ -38,17 +39,28 @@ public class InicioController {
 
         boolean loggedIn = Sesion.getUsuarioActual() != null;
         updateUIForSession(loggedIn);
+<<<<<<< HEAD
 
         if (loggedIn) {
             cargarActividadesUsuario();
         }
 
+=======
+>>>>>>> origin/main
         configurarUIRol();
 
         VBox.setVgrow(scrollActividadesComunidad, Priority.ALWAYS);
         VBox.setVgrow(scrollActividadesUsuario, Priority.ALWAYS);
     }
 
+<<<<<<< HEAD
+=======
+    // ============================================================
+    // CARGA DE ACTIVIDADES
+    // ============================================================
+
+    //metodo que coloca las actividades en el contenedor de la izquierda
+>>>>>>> origin/main
     private void cargarActividadesComunidad() {
         contenedorComunidad.getChildren().clear();
 
@@ -84,6 +96,36 @@ public class InicioController {
         }
     }
 
+<<<<<<< HEAD
+=======
+    // actividades denunciadas para el admin
+    private void cargarActividadesDenunciadas() {
+        contenedorUsuario.getChildren().clear();
+        List<ActividadDTO> denunciadas = actividadDAO.obtenerDenunciadasOrdenadas();
+        for (ActividadDTO act : denunciadas) {
+            contenedorUsuario.getChildren().add(crearCardActividad(act));
+        }
+    }
+
+    // decide qué cargar en el panel derecho según el rol
+    private void cargarPanelDerechoSegunRol() {
+        if (!Sesion.haySesion()) {
+            contenedorUsuario.getChildren().clear();
+            return;
+        }
+
+        if (Sesion.esAdmin()) {
+            cargarActividadesDenunciadas();
+        } else {
+            cargarActividadesUsuario();
+        }
+    }
+
+    // ============================================================
+    // CREACIÓN DE LA CARD CON BOTONES DE EDITAR Y ELIMINAR
+    // ============================================================
+
+>>>>>>> origin/main
     private Pane crearCardActividad(ActividadDTO act) {
         VBox vbox = new VBox(12);
         vbox.setStyle(
@@ -139,6 +181,12 @@ public class InicioController {
                 act.getCreador() != null &&
                 act.getCreador().getId() == Sesion.getUsuarioActual().getId();
 
+<<<<<<< HEAD
+=======
+        boolean esAdmin = Sesion.esAdmin();
+
+        // Si el usuario es el creador, mostrar botones de editar y eliminar
+>>>>>>> origin/main
         if (esCreadorUsuario) {
             Button btnEditar = new Button("✏️");
             btnEditar.setStyle(
@@ -170,8 +218,31 @@ public class InicioController {
 
             hBoton.getChildren().addAll(btnEditar, btnEliminar);
 
+<<<<<<< HEAD
         } else {
             Button btnInscribir = new Button();
+=======
+        } else if (esAdmin) {
+            // Admin: solo botón Eliminar (sin Inscribirse)
+            Button btnEliminarAdmin = new Button("Eliminar");
+            btnEliminarAdmin.setStyle(
+                    "-fx-background-color: #DC2626;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-background-radius: 18;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-padding: 6 18 6 18;" +
+                            "-fx-cursor: hand;"
+            );
+            btnEliminarAdmin.setOnAction(e -> {
+                e.consume();
+                onEliminarActividad(act);
+            });
+            hBoton.getChildren().add(btnEliminarAdmin);
+
+        } else {
+            // Botón Inscribirse para actividades de otros usuarios (usuario normal)
+            Button btnInscribir = new Button("Inscribirse");
+>>>>>>> origin/main
             btnInscribir.setStyle(
                     "-fx-background-color: #3B82F6;" +
                             "-fx-text-fill: white;" +
@@ -211,6 +282,7 @@ public class InicioController {
             hBoton.getChildren().add(btnInscribir);
         }
 
+<<<<<<< HEAD
         if (Sesion.esAdmin() && !esCreadorUsuario) {
             Button btnEliminarAdmin = new Button("Eliminar");
             btnEliminarAdmin.setStyle(
@@ -227,6 +299,8 @@ public class InicioController {
             hBoton.getChildren().add(btnEliminarAdmin);
         }
 
+=======
+>>>>>>> origin/main
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
         vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
 
@@ -268,7 +342,7 @@ public class InicioController {
         if (resultado == btnEliminar) {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
-            cargarActividadesUsuario();
+            cargarPanelDerechoSegunRol();
 
             Alert confirmacion = new Alert(Alert.AlertType.INFORMATION);
             confirmacion.setTitle("Actividad eliminada");
@@ -287,20 +361,32 @@ public class InicioController {
     }
 
     private void abrirDetalleActividad(ActividadDTO actividad) {
+        System.out.println("🔍 DEBUG - Actividad completa:");
+        System.out.println("  Título: " + actividad.getTitulo());
+        System.out.println("  Lat: " + actividad.getLatitud());
+        System.out.println("  Lon: " + actividad.getLongitud());
+        System.out.println("  Ubicación: " + actividad.getUbicacion());
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vistas/Actividad.fxml"));
             Parent root = loader.load();
             ActividadController controller = loader.getController();
             controller.setActividad(actividad);
             Stage stage = (Stage) logoImage.getScene().getWindow();
-            Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            stage.setScene(scene);
+            stage.setScene(new Scene(root));
+            stage.getScene().getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.show();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
+<<<<<<< HEAD
+=======
+
+
+    //metodo para poner en mayusculas
+>>>>>>> origin/main
     private String capitalize(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
@@ -355,18 +441,25 @@ public class InicioController {
         if (loggedIn && Sesion.getUsuarioActual() != null) {
             lblUser.setText(Sesion.getUsuarioActual().getNombre().substring(0, 1));
             lblCiudad.setText(Sesion.getUsuarioActual().getCiudad());
-            cargarActividadesUsuario();
         } else {
             lblUser.setText("");
             lblCiudad.setText("");
             contenedorUsuario.getChildren().clear();
         }
+
+        // cargo el panel derecho según el rol
+        cargarPanelDerechoSegunRol();
     }
 
+<<<<<<< HEAD
+=======
+    //cuando el usuario se logea la interfaz cambia
+>>>>>>> origin/main
     public void onUsuarioLogueado() {
         updateUIForSession(true);
         configurarUIRol();
         cargarActividadesComunidad();
+        cargarPanelDerechoSegunRol();
     }
 
     private void configurarUIRol() {
@@ -374,6 +467,21 @@ public class InicioController {
         if (lblAdminBadge != null) {
             lblAdminBadge.setVisible(esAdmin);
             lblAdminBadge.setManaged(esAdmin);
+        }
+
+        // cambio el título del panel derecho
+        if (lblTituloPanelDerecho != null) {
+            if (esAdmin) {
+                lblTituloPanelDerecho.setText("Actividades denunciadas");
+            } else {
+                lblTituloPanelDerecho.setText("Mis Actividades Creadas");
+            }
+        }
+
+        // oculto el boton de crear actividad para admins
+        if (btnCrearActividad != null) {
+            btnCrearActividad.setVisible(Sesion.haySesion() && !esAdmin);
+            btnCrearActividad.setManaged(Sesion.haySesion() && !esAdmin);
         }
 
         if (cmbDistancia != null) {
@@ -410,7 +518,12 @@ public class InicioController {
         if (resultado == btnEliminar) {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
+<<<<<<< HEAD
             if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
+=======
+            //y recarga el panel derecho según el rol
+            cargarPanelDerechoSegunRol();
+>>>>>>> origin/main
         }
     }
 }
