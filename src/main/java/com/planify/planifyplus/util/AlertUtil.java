@@ -20,7 +20,7 @@ public class AlertUtil {
         alert.setHeaderText(null);
         alert.setContentText(message);
 
-        //  Icono de la app
+        // Icono de la app
         ImageView icon = new ImageView(
                 new Image(AlertUtil.class.getResourceAsStream(ICON_PATH))
         );
@@ -28,19 +28,21 @@ public class AlertUtil {
         icon.setFitHeight(48);
         alert.setGraphic(icon);
 
-        //  Icono en la ventana
+        // Icono en la ventana
         Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
         stage.getIcons().add(new Image(AlertUtil.class.getResourceAsStream(ICON_PATH)));
 
-        //  CSS de la app
+        // CSS de la app
         alert.getDialogPane().getStylesheets().add(
                 AlertUtil.class.getResource(CSS_PATH).toExternalForm()
         );
         alert.getDialogPane().getStyleClass().add("planify-alert");
 
-        // ✅ Estilado del botón
-        alert.getDialogPane().lookupButton(ButtonType.OK)
-                .getStyleClass().add("planify-alert-button");
+        // Estilado del botón OK (para alerts normales INFO/ERROR)
+        Button okBtn = (Button) alert.getDialogPane().lookupButton(ButtonType.OK);
+        if (okBtn != null) {
+            okBtn.getStyleClass().add("planify-alert-button");
+        }
 
         return alert;
     }
@@ -65,9 +67,16 @@ public class AlertUtil {
 
         alert.getButtonTypes().setAll(cancelar, aceptar);
 
-        // estilos botones
+        // ✅ Estilos botones (ACEPTAR y CANCELAR)
         Button btnAceptar = (Button) alert.getDialogPane().lookupButton(aceptar);
-        btnAceptar.getStyleClass().add("planify-alert-button");
+        if (btnAceptar != null) {
+            btnAceptar.getStyleClass().add("planify-alert-button");
+        }
+
+        Button btnCancelar = (Button) alert.getDialogPane().lookupButton(cancelar);
+        if (btnCancelar != null) {
+            btnCancelar.getStyleClass().add("planify-alert-button");
+        }
 
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == aceptar;
