@@ -162,7 +162,7 @@ public class CrearActividadController {
         if (actividad.getLongitud() != null) txtLongitud.setText(actividad.getLongitud().toString());
 
         if (lblTituloPagina != null) lblTituloPagina.setText("Editar Actividad");
-        if (btnGuardar != null) btnGuardar.setText("Actualizar Actividad");
+        if (btnGuardar != null) btnGuardar.setText("Actualizar");
     }
 
     // ========== GUARDAR ==========

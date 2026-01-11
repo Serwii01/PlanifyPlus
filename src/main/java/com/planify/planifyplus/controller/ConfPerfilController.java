@@ -2,6 +2,7 @@ package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.UsuarioDAO;
 import com.planify.planifyplus.dto.UsuarioDTO;
+import com.planify.planifyplus.util.AlertUtil;  // ← NUEVO IMPORT
 import com.planify.planifyplus.util.Sesion;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -15,6 +16,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 public class ConfPerfilController {
 
@@ -64,7 +66,7 @@ public class ConfPerfilController {
     private void onGuardarCambios(ActionEvent event) {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
         if (usuario == null) {
-            mostrarAlerta("Error", "No hay ningún usuario en sesión.", Alert.AlertType.ERROR);
+            AlertUtil.error("Error", "No hay ningún usuario en sesión.");
             return;
         }
 
@@ -73,25 +75,39 @@ public class ConfPerfilController {
         String contrasena = txtContrasena.getText();
         String ciudad = cmbCiudad.getValue();
 
-        if (nombre.isEmpty() || email.isEmpty() || contrasena.isEmpty()) {
-            mostrarAlerta("Campos obligatorios",
-                    "Nombre, correo y contraseña son obligatorios.",
-                    Alert.AlertType.WARNING);
+        // Validación campos obligatorios
+        if (nombre.isEmpty() || email.isEmpty() || contrasena.isEmpty() || ciudad == null || ciudad.isEmpty()) {
+            AlertUtil.error("Campos obligatorios",
+                    "Nombre, correo, contraseña y ciudad son obligatorios.");
             return;
         }
 
-        if (!email.contains("@") || !email.contains(".")) {
-            mostrarAlerta("Correo no válido",
-                    "Introduce un correo electrónico válido.",
-                    Alert.AlertType.WARNING);
+        // Validación longitud nombre (mínimo 2 caracteres)
+        if (nombre.length() < 2) {
+            AlertUtil.error("Nombre inválido",
+                    "El nombre debe tener al menos 2 caracteres.");
+            return;
+        }
+
+        // Validación longitud contraseña (mínimo 6 caracteres)
+        if (contrasena.length() < 6) {
+            AlertUtil.error("Contraseña inválida",
+                    "La contraseña debe tener al menos 6 caracteres.");
+            return;
+        }
+
+        // Validación email mejorada con regex
+        Pattern emailPattern = Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$");
+        if (!emailPattern.matcher(email).matches()) {
+            AlertUtil.error("Correo no válido",
+                    "Introduce un correo electrónico válido (ej: usuario@dominio.com).");
             return;
         }
 
         UsuarioDTO otro = usuarioDAO.buscarPorEmail(email);
         if (otro != null && otro.getId() != usuario.getId()) {
-            mostrarAlerta("Correo ya en uso",
-                    "Ese correo electrónico ya está registrado por otro usuario.",
-                    Alert.AlertType.WARNING);
+            AlertUtil.error("Correo ya en uso",
+                    "Ese correo electrónico ya está registrado por otro usuario.");
             return;
         }
 
@@ -104,17 +120,15 @@ public class ConfPerfilController {
             usuarioDAO.actualizar(usuario);
             Sesion.actualizarUsuarioActual(usuario);
 
-            mostrarAlerta("Éxito",
-                    "Los cambios se han guardado correctamente.",
-                    Alert.AlertType.INFORMATION);
+            AlertUtil.info("Éxito",
+                    "Los cambios se han guardado correctamente.");
 
             irAPerfil(event);
 
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            mostrarAlerta("Error",
-                    "Se ha producido un error al guardar en la base de datos.",
-                    Alert.AlertType.ERROR);
+            AlertUtil.error("Error",
+                    "Se ha producido un error al guardar en la base de datos.");
         }
     }
 
@@ -160,17 +174,10 @@ public class ConfPerfilController {
 
         } catch (IOException e) {
             e.printStackTrace();
-            mostrarAlerta("Error",
-                    "No se ha podido abrir la nueva pantalla.",
-                    Alert.AlertType.ERROR);
+            AlertUtil.error("Error",  // ← CAMBIADO A AlertUtil
+                    "No se ha podido abrir la nueva pantalla.");
         }
     }
 
-    private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
-        Alert alerta = new Alert(tipo);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-        alerta.showAndWait();
-    }
+    // ✅ MÉTODO mostrarAlerta ELIMINADO (ya no se usa)
 }
