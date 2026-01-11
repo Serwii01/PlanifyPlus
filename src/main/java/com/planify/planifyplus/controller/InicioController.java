@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
@@ -43,7 +44,7 @@ public class InicioController {
         boolean loggedIn = Sesion.getUsuarioActual() != null;
         updateUIForSession(loggedIn);
 
-        if (loggedIn) cargarActividadesUsuario();
+        if (loggedIn) cargarPanelDerechoSegunRol();
 
         configurarUIRol();
 
@@ -84,6 +85,15 @@ public class InicioController {
     private void cargarActividadesDenunciadas() {
         contenedorUsuario.getChildren().clear();
         List<ActividadDTO> denunciadas = actividadDAO.obtenerDenunciadasOrdenadas();
+
+        // Opcional: mensaje si no hay
+        if (denunciadas.isEmpty()) {
+            Label lbl = new Label("No hay actividades denunciadas.");
+            lbl.setStyle("-fx-text-fill: #6B7280; -fx-padding: 12;");
+            contenedorUsuario.getChildren().add(lbl);
+            return;
+        }
+
         for (ActividadDTO act : denunciadas) {
             contenedorUsuario.getChildren().add(crearCardActividad(act));
         }
@@ -157,7 +167,6 @@ public class InicioController {
 
         if (esCreadorUsuario) {
 
-            // ✅ BOTÓN AZUL: "Editar"
             Button btnEditar = new Button("Editar");
             btnEditar.setStyle(
                     "-fx-background-color: #3B82F6;" +
@@ -171,8 +180,8 @@ public class InicioController {
                 e.consume();
                 onEditarActividad(act);
             });
+            btnEditar.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
 
-            // ✅ BOTÓN ROJO: "Eliminar"
             Button btnEliminar = new Button("Eliminar");
             btnEliminar.setStyle(
                     "-fx-background-color: #DC2626;" +
@@ -186,6 +195,7 @@ public class InicioController {
                 e.consume();
                 onEliminarActividadUsuario(act);
             });
+            btnEliminar.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
 
             hBoton.getChildren().addAll(btnEditar, btnEliminar);
 
@@ -204,6 +214,7 @@ public class InicioController {
                 e.consume();
                 onEliminarActividad(act);
             });
+            btnEliminarAdmin.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
 
             hBoton.getChildren().add(btnEliminarAdmin);
 
@@ -217,6 +228,7 @@ public class InicioController {
                             "-fx-font-size: 15;" +
                             "-fx-padding: 6 22 6 22;"
             );
+            btnInscribir.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
 
             if (!Sesion.haySesion()) {
                 btnInscribir.setText("Inicia sesión");
@@ -245,7 +257,7 @@ public class InicioController {
                     }
 
                     cargarActividadesComunidad();
-                    if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
+                    cargarPanelDerechoSegunRol();
                 });
             }
 
@@ -253,6 +265,8 @@ public class InicioController {
         }
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
+
+        // ✅ IMPORTANTE: el click de abrir detalle solo si no has pulsado un botón (ya lo consumimos arriba)
         vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
 
         return vbox;
@@ -379,10 +393,9 @@ public class InicioController {
         lblNoSesion.setVisible(!loggedIn);
 
         if (loggedIn && Sesion.getUsuarioActual() != null) {
-            lblUser.setText(Sesion.getUsuarioActual().getNombre()); // aqui te pilla el nombre con el que te logueaste
-            lblCiudad.setText(Sesion.getUsuarioActual().getCiudad()); // aqui te pilla la ciudad
-        }
-        else {
+            lblUser.setText(Sesion.getUsuarioActual().getNombre());
+            lblCiudad.setText(Sesion.getUsuarioActual().getCiudad());
+        } else {
             lblUser.setText("");
             lblCiudad.setText("");
             contenedorUsuario.getChildren().clear();
@@ -445,7 +458,6 @@ public class InicioController {
         if (resultado == btnEliminar) {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
-            if (Sesion.getUsuarioActual() != null) cargarActividadesUsuario();
             cargarPanelDerechoSegunRol();
         }
     }
