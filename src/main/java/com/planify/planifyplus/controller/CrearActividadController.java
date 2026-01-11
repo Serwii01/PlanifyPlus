@@ -4,13 +4,19 @@ import com.planify.planifyplus.dao.ActividadDAO;
 import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
 import com.planify.planifyplus.dto.TipoActividad;
+import com.planify.planifyplus.util.AlertUtil;
 import com.planify.planifyplus.util.Sesion;
 import com.planify.planifyplus.util.ViewUtil;
 import com.planify.planifyplus.util.WindowUtil;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
@@ -33,7 +39,7 @@ public class CrearActividadController {
     @FXML private TextField txtLatitud;
     @FXML private TextField txtLongitud;
     @FXML private WebView webViewBuscador;
-    @FXML private Button btnGuardar;
+    @FXML private javafx.scene.control.Button btnGuardar;
     @FXML private Label lblTituloPagina;
 
     private final ActividadDAO actividadDAO = new ActividadDAO();
@@ -53,95 +59,60 @@ public class CrearActividadController {
         webEngine.setJavaScriptEnabled(true);
 
         String htmlUrl = getClass().getResource("/API/map-buscador-ubicacion.html").toExternalForm();
-        System.out.println("🗺️ Cargando buscador desde: " + htmlUrl);
+        webEngine.load(htmlUrl);
 
         webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-            System.out.println("📡 Estado del WebView: " + newState);
-
             if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
-                System.out.println("✅ WebView cargado correctamente");
-
-                javafx.application.Platform.runLater(() -> {
-                    try {
-                        JSObject window = (JSObject) webEngine.executeScript("window");
-                        window.setMember("javaApp", new JavaScriptBridge());
-                        System.out.println("✅ JavaScriptBridge registrado correctamente");
-
-                        Object result = webEngine.executeScript("typeof javaApp");
-                        System.out.println("🔍 Tipo de javaApp: " + result);
-
-                        if (txtCiudad.getText() != null && !txtCiudad.getText().trim().isEmpty()) {
-                            String jsCall = "if(typeof setCityContext === 'function') setCityContext('" +
-                                    txtCiudad.getText().replace("'", "\\'") + "');";
-                            webEngine.executeScript(jsCall);
-                            System.out.println("📍 Contexto de ciudad establecido: " + txtCiudad.getText());
-                        }
-
-                        // NUEVO: Crear un polling para verificar si hay ubicación seleccionada
-                        iniciarPollingUbicacion();
-
-                    } catch (Exception e) {
-                        System.err.println("❌ Error registrando JavaScriptBridge: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-                });
-            } else if (newState == javafx.concurrent.Worker.State.FAILED) {
-                System.err.println("❌ Error cargando WebView buscador");
+                try {
+                    JSObject window = (JSObject) webEngine.executeScript("window");
+                    window.setMember("javaApp", new JavaScriptBridge());
+                    iniciarPollingUbicacion();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
-
-        webEngine.load(htmlUrl);
 
         txtCiudad.textProperty().addListener((obs, old, newVal) -> {
             if (webEngine != null && newVal != null && !newVal.trim().isEmpty()) {
                 try {
-                    String jsCall = "if(typeof setCityContext === 'function') setCityContext('" +
-                            newVal.replace("'", "\\'") + "');";
-                    webEngine.executeScript(jsCall);
-                    System.out.println("📍 Contexto de ciudad actualizado: " + newVal);
-                } catch (Exception e) {
-                    System.err.println("⚠️ Error actualizando ciudad: " + e.getMessage());
-                }
+                    webEngine.executeScript(
+                            "if(typeof setCityContext === 'function') setCityContext('" +
+                                    newVal.replace("'", "\\'") + "');"
+                    );
+                } catch (Exception ignored) {}
             }
         });
     }
 
-    // NUEVO: Método para hacer polling de la ubicación seleccionada
-    private javafx.animation.Timeline pollingTimeline;
+    // ========== POLLING UBICACIÓN ==========
+    private Timeline pollingTimeline;
+    private String ultimaUbicacion = "";
 
     private void iniciarPollingUbicacion() {
-        if (pollingTimeline != null) {
-            pollingTimeline.stop();
-        }
+        if (pollingTimeline != null) pollingTimeline.stop();
 
-        pollingTimeline = new javafx.animation.Timeline(
+        pollingTimeline = new Timeline(
                 new javafx.animation.KeyFrame(
                         javafx.util.Duration.millis(500),
                         event -> verificarUbicacionSeleccionada()
                 )
         );
-        pollingTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+        pollingTimeline.setCycleCount(Timeline.INDEFINITE);
         pollingTimeline.play();
-        System.out.println("🔄 Polling de ubicación iniciado");
     }
-
-    private String ultimaUbicacion = "";
 
     private void verificarUbicacionSeleccionada() {
         try {
-            // Obtener el texto del campo de ubicación dentro del WebView
             Object ubicacion = webEngine.executeScript(
                     "document.getElementById('locationText') ? document.getElementById('locationText').textContent : ''"
             );
 
             if (ubicacion != null && !ubicacion.toString().trim().isEmpty()) {
                 String ubicacionStr = ubicacion.toString().trim();
-
-                // Solo actualizar si cambió
                 if (!ubicacionStr.equals(ultimaUbicacion)) {
                     ultimaUbicacion = ubicacionStr;
 
-                    // Obtener coordenadas desde variables globales del JavaScript
                     Object latObj = webEngine.executeScript("window.selectedLat");
                     Object lonObj = webEngine.executeScript("window.selectedLon");
 
@@ -149,43 +120,29 @@ public class CrearActividadController {
                         double lat = Double.parseDouble(latObj.toString());
                         double lon = Double.parseDouble(lonObj.toString());
 
-                        System.out.println("📍 Ubicación detectada por polling:");
-                        System.out.println("   - Nombre: " + ubicacionStr);
-                        System.out.println("   - Lat: " + lat);
-                        System.out.println("   - Lon: " + lon);
-
                         javafx.application.Platform.runLater(() -> {
                             txtUbicacion.setText(ubicacionStr);
                             txtLatitud.setText(String.valueOf(lat));
                             txtLongitud.setText(String.valueOf(lon));
-                            System.out.println("✅ Campos actualizados por polling");
                         });
                     }
                 }
             }
-        } catch (Exception e) {
-            // Ignorar errores silenciosamente (es normal que falle cuando aún no hay selección)
-        }
+        } catch (Exception ignored) {}
     }
 
-
-    // Clase interna para comunicación JavaScript -> Java
+    // ========== JS BRIDGE ==========
     public class JavaScriptBridge {
         public void onLocationSelected(String displayName, double lat, double lon) {
-            System.out.println("📍 onLocationSelected llamado desde JS:");
-            System.out.println("   - Nombre: " + displayName);
-            System.out.println("   - Lat: " + lat);
-            System.out.println("   - Lon: " + lon);
-
             javafx.application.Platform.runLater(() -> {
                 txtUbicacion.setText(displayName);
                 txtLatitud.setText(String.valueOf(lat));
                 txtLongitud.setText(String.valueOf(lon));
-                System.out.println("✅ Campos actualizados en JavaFX");
             });
         }
     }
 
+    // ========== EDICIÓN ==========
     public void setActividadParaEditar(ActividadDTO actividad) {
         this.actividadAEditar = actividad;
 
@@ -208,71 +165,49 @@ public class CrearActividadController {
         if (btnGuardar != null) btnGuardar.setText("Actualizar Actividad");
     }
 
+    // ========== GUARDAR ==========
     @FXML
     private void handleGuardarActividad() {
-        if (txtTitulo.getText().trim().isEmpty()) {
-            mostrarError("El título es obligatorio");
-            return;
-        }
-        if (txtDescripcion.getText().trim().isEmpty()) {
-            mostrarError("La descripción es obligatoria");
-            return;
-        }
-        if (dpFecha.getValue() == null) {
-            mostrarError("La fecha es obligatoria");
-            return;
-        }
-        if (txtHora.getText().trim().isEmpty()) {
-            mostrarError("La hora es obligatoria");
-            return;
-        }
-        if (cmbTipo.getValue() == null) {
-            mostrarError("Debes seleccionar un tipo de actividad");
-            return;
-        }
-        if (txtUbicacion.getText().trim().isEmpty()) {
-            mostrarError("Debes seleccionar una ubicación del buscador");
-            return;
-        }
-        if (txtCiudad.getText().trim().isEmpty()) {
-            mostrarError("La ciudad es obligatoria");
-            return;
-        }
-        if (txtAforo.getText().trim().isEmpty()) {
-            mostrarError("El aforo es obligatorio");
-            return;
-        }
+        if (txtTitulo.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "El título es obligatorio."); return; }
+        if (txtDescripcion.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "La descripción es obligatoria."); return; }
+        if (dpFecha.getValue() == null) { AlertUtil.error("Campo obligatorio", "La fecha es obligatoria."); return; }
+        if (txtHora.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "La hora es obligatoria."); return; }
+        if (cmbTipo.getValue() == null) { AlertUtil.error("Campo obligatorio", "Debes seleccionar un tipo de actividad."); return; }
+        if (txtUbicacion.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "Debes seleccionar una ubicación del buscador."); return; }
+        if (txtCiudad.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "La ciudad es obligatoria."); return; }
+        if (txtAforo.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "El aforo es obligatorio."); return; }
 
         try {
             String[] horaPartes = txtHora.getText().split(":");
-            if (horaPartes.length != 2) {
-                mostrarError("Formato de hora inválido. Usa HH:mm (ej. 18:30)");
-                return;
-            }
+            if (horaPartes.length != 2) { AlertUtil.error("Hora inválida", "Formato de hora inválido. Usa HH:mm (ej. 18:30)."); return; }
 
             int hora = Integer.parseInt(horaPartes[0]);
             int minutos = Integer.parseInt(horaPartes[1]);
 
             if (hora < 0 || hora > 23 || minutos < 0 || minutos > 59) {
-                mostrarError("Hora o minutos inválidos");
+                AlertUtil.error("Hora inválida", "Hora o minutos inválidos.");
                 return;
             }
 
             LocalDateTime fechaHora = dpFecha.getValue().atTime(hora, minutos);
 
+            // ✅ NO PERMITIR FECHAS PASADAS O IGUAL A AHORA
+            if (!fechaHora.isAfter(LocalDateTime.now())) {
+                AlertUtil.error("Fecha inválida", "La actividad debe tener una fecha y hora futura.");
+                return;
+            }
+
             int aforo = Integer.parseInt(txtAforo.getText());
             if (aforo <= 0) {
-                mostrarError("El aforo debe ser mayor que 0");
+                AlertUtil.error("Aforo inválido", "El aforo debe ser mayor que 0.");
                 return;
             }
 
             boolean esEdicion = (actividadAEditar != null);
 
-            ActividadDTO actividad;
-            if (esEdicion) {
-                actividad = actividadAEditar;
-            } else {
-                actividad = new ActividadDTO();
+            ActividadDTO actividad = esEdicion ? actividadAEditar : new ActividadDTO();
+
+            if (!esEdicion) {
                 actividad.setPredeterminada(false);
                 actividad.setCreador(Sesion.getUsuarioActual());
                 actividad.setCreadoEn(LocalDateTime.now());
@@ -286,36 +221,31 @@ public class CrearActividadController {
             actividad.setCiudad(txtCiudad.getText().trim());
             actividad.setAforo(aforo);
 
-            if (!txtLatitud.getText().trim().isEmpty()) {
+            if (!txtLatitud.getText().trim().isEmpty())
                 actividad.setLatitud(new BigDecimal(txtLatitud.getText()));
-            }
-            if (!txtLongitud.getText().trim().isEmpty()) {
+            if (!txtLongitud.getText().trim().isEmpty())
                 actividad.setLongitud(new BigDecimal(txtLongitud.getText()));
-            }
 
             actividadDAO.guardar(actividad);
 
             if (!esEdicion && Sesion.haySesion() && !Sesion.esAdmin()) {
-                if (actividad.getId() != null) {
-                    inscripcionDAO.inscribir(Sesion.getUsuarioActual(), actividad);
-                }
+                inscripcionDAO.inscribir(Sesion.getUsuarioActual(), actividad);
             }
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Éxito");
-            alert.setHeaderText(null);
-            alert.setContentText(esEdicion
-                    ? "Actividad actualizada correctamente"
-                    : "Actividad creada correctamente (ya estás inscrito)");
-            alert.showAndWait();
+            AlertUtil.info(
+                    "Éxito",
+                    esEdicion
+                            ? "Actividad actualizada correctamente."
+                            : "Actividad creada correctamente.\n\n(Ya estás inscrito)"
+            );
 
             irAInicio();
 
-        } catch (NumberFormatException e) {
-            mostrarError("Formato de hora o aforo inválido");
+        } catch (NumberFormatException nfe) {
+            AlertUtil.error("Formato inválido", "Formato de hora o aforo inválido.");
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarError("Error al guardar: " + e.getMessage());
+            AlertUtil.error("Error", "Error al guardar la actividad.\n\nDetalle: " + e.getMessage());
         }
     }
 
@@ -328,8 +258,8 @@ public class CrearActividadController {
         try {
             Stage stage = (Stage) btnGuardar.getScene().getWindow();
             Parent root = ViewUtil.loadFXML(getClass(), "/vistas/Inicio.fxml");
-
             Scene scene = new Scene(root);
+
             var css = getClass().getResource("/css/styles.css");
             if (css != null) scene.getStylesheets().add(css.toExternalForm());
 
@@ -337,15 +267,7 @@ public class CrearActividadController {
             WindowUtil.forceMaximize(stage);
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarError("No se pudo volver a la pantalla de inicio");
+            AlertUtil.error("Error", "No se pudo volver a la pantalla de inicio.");
         }
-    }
-
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
     }
 }
