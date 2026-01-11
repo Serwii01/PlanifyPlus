@@ -82,7 +82,7 @@ public class ConfPerfilController {
             return;
         }
 
-        // Validación longitud nombre (mínimo 2 caracteres)
+
         if (nombre.length() < 2) {
             AlertUtil.error("Nombre inválido",
                     "El nombre debe tener al menos 2 caracteres.");
