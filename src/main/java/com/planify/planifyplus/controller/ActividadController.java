@@ -142,7 +142,7 @@ public class ActividadController {
             lblPlazas.setText("0 / " + actividad.getAforo() + " personas inscritas");
         }
 
-        // ✅ IMPORTANTÍSIMO: esto es lo que hace que dentro salga "Inscrito" si ya lo estás
+        // esto es lo que hace que dentro salga "Inscrito" si ya lo estás
         actualizarEstadoInscripcion();
 
         configurarBotonDenunciarSegunSesionYActividad();

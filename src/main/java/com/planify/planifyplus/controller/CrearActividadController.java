@@ -191,7 +191,7 @@ public class CrearActividadController {
 
             LocalDateTime fechaHora = dpFecha.getValue().atTime(hora, minutos);
 
-            // ✅ NO PERMITIR FECHAS PASADAS O IGUAL A AHORA
+            //  NO PERMITIR FECHAS PASADAS O IGUAL A AHORA
             if (!fechaHora.isAfter(LocalDateTime.now())) {
                 AlertUtil.error("Fecha inválida", "La actividad debe tener una fecha y hora futura.");
                 return;

@@ -132,7 +132,7 @@ public class ConfPerfilController {
         cambiarEscena("/vistas/Perfil.fxml", event);
     }
 
-    // ✅ Método genérico: cambia escena + FULL SCREEN REAL
+    //  Método genérico: cambia escena + FULL SCREEN REAL
     private void cambiarEscena(String fxml, ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
@@ -144,14 +144,14 @@ public class ConfPerfilController {
 
             Scene scene = new Scene(root);
 
-            // ✅ si usas CSS global
+            //  si usas CSS global
             try {
                 scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             } catch (Exception ignored) {}
 
             stage.setScene(scene);
 
-            // ✅ Pantalla completa real (no solo maximized)
+            //  Pantalla completa real (no solo maximized)
             stage.setFullScreenExitHint("");
             stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 

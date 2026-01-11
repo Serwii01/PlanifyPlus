@@ -148,11 +148,7 @@ public class ActividadDAO {
         }
     }
 
-    /**
-     * ✅ BORRADO SEGURO:
-     * - Borra primero denuncias e inscripciones (por FK)
-     * - Luego borra la actividad
-     */
+
     public void eliminarPorId(Long id) {
         if (id == null) return;
 
