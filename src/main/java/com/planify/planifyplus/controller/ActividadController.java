@@ -22,6 +22,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -71,51 +72,50 @@ public class ActividadController {
 
         mapEngine = webViewMap.getEngine();
 
-        String html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8" />
-                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                <style>
-                    html, body, #map { height: 100%; margin: 0; padding: 0; border-radius: 12px; }
-                    #map { background: #f8fafc; }
-                </style>
-            </head>
-            <body>
-                <div id="map"></div>
-                <script>
-                    var map = L.map('map').setView([40.4168, -3.7038], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    }).addTo(map);
-                    
-                    window.planifyMap = {
-                        setLocation: function(lat, lon, zoom) {
-                            var pos = [lat, lon];
-                            map.setView(pos, zoom || 15);
-                            if (window.activityMarker) map.removeLayer(window.activityMarker);
-                            window.activityMarker = L.marker(pos)
-                                .addTo(map)
-                                .bindPopup('<b>🅿️ Ubicación de la actividad</b>')
-                                .openPopup();
-                        }
-                    };
-                </script>
-            </body>
-            </html>
-            """;
+        try {
+            // Cargar tu archivo HTML existente
+            URL htmlUrl = getClass().getResource("/API/map-crear-actividad.html");
+
+            if (htmlUrl != null) {
+                mapEngine.load(htmlUrl.toExternalForm());
+                System.out.println("✅ Cargando mapa desde: " + htmlUrl);
+            } else {
+                System.err.println("❌ No se encontró /API/map-crear-actividad.html");
+                // Fallback: intentar ruta alternativa
+                htmlUrl = getClass().getResource("/map-crear-actividad.html");
+                if (htmlUrl != null) {
+                    mapEngine.load(htmlUrl.toExternalForm());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error cargando mapa: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state == Worker.State.SUCCEEDED) {
+                System.out.println("✅ WebView cargado exitosamente");
                 mapaListo = true;
+
+                // Llamar a la función de inicialización del HTML
+                Platform.runLater(() -> {
+                    try {
+                        mapEngine.executeScript("if(typeof window.onWebViewReady === 'function') window.onWebViewReady();");
+                        System.out.println("✅ onWebViewReady() ejecutado");
+                    } catch (Exception e) {
+                        System.err.println("⚠️ onWebViewReady no disponible: " + e.getMessage());
+                    }
+                });
+
                 actualizarMapaConActividadConReintento();
+            } else if (state == Worker.State.FAILED) {
+                System.err.println("❌ Error cargando WebView");
             }
         });
-
-        mapEngine.loadContent(html);
     }
+
+
+
 
     public void setActividad(ActividadDTO actividad) {
         this.actividad = actividad;
@@ -214,43 +214,54 @@ public class ActividadController {
             return;
         }
 
-        if (actividad == null) return;
-        if (mapEngine == null) return;
-        if (!mapaListo) return;
-        if (mapaActualizado) return;
+        if (actividad == null || mapEngine == null || !mapaListo || mapaActualizado) return;
 
-        boolean existePlanifyMap = false;
+        // Verificar que updateMapLocation existe
+        boolean existeFuncion = false;
         try {
-            Object res = mapEngine.executeScript("typeof planifyMap !== 'undefined'");
-            if (res instanceof Boolean b) existePlanifyMap = b;
-        } catch (Exception ignored) {}
-
-        if (!existePlanifyMap) {
-            reintentarMapa();
-            return;
+            Object res = mapEngine.executeScript("typeof window.updateMapLocation");
+            existeFuncion = "function".equals(res);
+            System.out.println("🔍 Verificando updateMapLocation: " + res);
+        } catch (Exception e) {
+            System.err.println("⚠️ Error verificando función: " + e.getMessage());
         }
 
-        if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
-            try {
-                mapEngine.executeScript("planifyMap.setLocation(40.4168, -3.7038, 12);");
-                mapaActualizado = true;
-            } catch (Exception e) {
+        if (!existeFuncion) {
+            if (intentosMapa < MAX_INTENTOS_MAPA) {
                 reintentarMapa();
             }
             return;
         }
 
-        double lat = actividad.getLatitud().doubleValue();
-        double lon = actividad.getLongitud().doubleValue();
-
         try {
-            String jsCall = "planifyMap.setLocation(" + lat + ", " + lon + ", 16);";
-            mapEngine.executeScript(jsCall);
+            if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
+                // Ubicación por defecto (centro de España)
+                mapEngine.executeScript("window.updateMapLocation(40.4168, -3.7038, 'Ubicación no especificada');");
+                System.out.println("📍 Mostrando ubicación por defecto");
+            } else {
+                // Usar coordenadas de la actividad
+                double lat = actividad.getLatitud().doubleValue();
+                double lon = actividad.getLongitud().doubleValue();
+                String label = actividad.getUbicacion() != null ? actividad.getUbicacion() : "Ubicación de la actividad";
+
+                // IMPORTANTE: Usar Locale.US para punto decimal
+                String jsCall = String.format(Locale.US,
+                        "window.updateMapLocation(%f, %f, '%s');",
+                        lat, lon, label.replace("'", "\\'"));
+
+                mapEngine.executeScript(jsCall);
+                System.out.println("✅ Mapa actualizado: lat=" + lat + ", lon=" + lon);
+            }
+
             mapaActualizado = true;
+
         } catch (Exception e) {
+            System.err.println("❌ Error actualizando mapa: " + e.getMessage());
+            e.printStackTrace();
             reintentarMapa();
         }
     }
+
 
     private void reintentarMapa() {
         if (intentosMapa >= MAX_INTENTOS_MAPA) return;

@@ -18,7 +18,8 @@
                     style="-fx-background-color: #E5E7EB;
                            -fx-text-fill: #222;
                            -fx-background-radius: 15;
-                           -fx-font-size: 15;"/>
+                           -fx-font-size: 15;
+                           -fx-cursor: hand;"/>
 
             <Label text="PlanifyPlus"
                    style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
@@ -34,12 +35,13 @@
             <VBox alignment="TOP_CENTER" spacing="0"
                   style="-fx-padding: 40 20 40 20;">
 
-                <VBox maxWidth="700" spacing="24"
+                <VBox maxWidth="750" spacing="24"
                       style="-fx-background-color: white;
                              -fx-padding: 40 36 40 36;
                              -fx-background-radius: 18;
                              -fx-border-color: #E5E7EB;
-                             -fx-border-width: 1.5;">
+                             -fx-border-width: 1.5;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);">
 
                     <!-- Título -->
                     <VBox spacing="8">
@@ -49,13 +51,17 @@
                                style="-fx-font-size: 15; -fx-text-fill: #6B7280;"/>
                     </VBox>
 
+                    <Separator style="-fx-background-color: #E5E7EB;"/>
+
                     <!-- Campo: Título -->
                     <VBox spacing="8">
                         <Label text="Título de la actividad *"
                                style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <TextField fx:id="txtTitulo"
                                    promptText="ej. Clase de Yoga al Aire Libre"
-                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                                   style="-fx-font-size: 15; -fx-padding: 12 14;
+                                          -fx-background-radius: 8; -fx-border-radius: 8;
+                                          -fx-border-color: #E5E7EB; -fx-border-width: 1;"/>
                     </VBox>
 
                     <!-- Campo: Descripción -->
@@ -66,7 +72,9 @@
                                   promptText="Describe tu actividad, qué incluye, qué deben llevar los participantes..."
                                   wrapText="true"
                                   prefRowCount="4"
-                                  style="-fx-font-size: 14; -fx-padding: 10 14;"/>
+                                  style="-fx-font-size: 14; -fx-padding: 10 14;
+                                         -fx-background-radius: 8; -fx-border-radius: 8;
+                                         -fx-border-color: #E5E7EB; -fx-border-width: 1;"/>
                     </VBox>
 
                     <!-- Fecha y Hora -->
@@ -76,7 +84,8 @@
                                    style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                             <DatePicker fx:id="dpFecha"
                                         promptText="Selecciona una fecha"
-                                        prefWidth="300"/>
+                                        prefWidth="300"
+                                        style="-fx-background-radius: 8;"/>
                         </VBox>
 
                         <VBox spacing="8" HBox.hgrow="ALWAYS">
@@ -84,7 +93,9 @@
                                    style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                             <TextField fx:id="txtHora"
                                        promptText="ej. 18:30"
-                                       style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                                       style="-fx-font-size: 15; -fx-padding: 12 14;
+                                              -fx-background-radius: 8; -fx-border-radius: 8;
+                                              -fx-border-color: #E5E7EB; -fx-border-width: 1;"/>
                         </VBox>
                     </HBox>
 
@@ -94,36 +105,42 @@
                                style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <ComboBox fx:id="cmbTipo"
                                   promptText="Selecciona un tipo"
-                                  prefWidth="300"/>
+                                  prefWidth="300"
+                                  style="-fx-background-radius: 8;"/>
                     </VBox>
 
                     <!-- BUSCADOR DE UBICACIÓN CON WEBVIEW -->
-                    <VBox spacing="8">
+                    <VBox spacing="10">
                         <Label text="Ubicación *"
                                style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <Label text="📍 Busca y selecciona la ubicación exacta del evento"
                                style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
 
-                        <!-- WebView para el buscador -->
-                        <WebView fx:id="webViewBuscador"
-                                 prefHeight="120"
-                                 minHeight="120"
-                                 maxHeight="120"
-                                 style="-fx-background-color: transparent;"/>
+                        <!-- WebView MÁS GRANDE -->
+                        <VBox style="-fx-border-color: #D1D5DB; -fx-border-width: 2;
+                                     -fx-border-radius: 12; -fx-background-radius: 12;
+                                     -fx-background-color: white;">
+                            <WebView fx:id="webViewBuscador"
+                                     prefHeight="420"
+                                     minHeight="400"
+                                     maxHeight="500"
+                                     style="-fx-background-color: white;"/>
+                        </VBox>
 
                         <!-- Campo para mostrar la ubicación seleccionada -->
-                        <VBox spacing="6" style="-fx-padding: 8 0 0 0;">
+                        <VBox spacing="8" style="-fx-padding: 8 0 0 0;">
                             <Label text="✓ Ubicación seleccionada:"
                                    style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1563e2;"/>
                             <TextField fx:id="txtUbicacion"
                                        editable="false"
                                        promptText="Ninguna ubicación seleccionada aún"
-                                       style="-fx-font-size: 14; -fx-padding: 8 12;
-                                              -fx-background-color: #E5F2FF;
+                                       style="-fx-font-size: 14; -fx-padding: 12 14;
+                                              -fx-background-color: #EFF6FF;
                                               -fx-border-color: #1563e2;
-                                              -fx-border-width: 1;
+                                              -fx-border-width: 2;
                                               -fx-border-radius: 8;
-                                              -fx-background-radius: 8;"/>
+                                              -fx-background-radius: 8;
+                                              -fx-text-fill: #1e40af;"/>
                         </VBox>
                     </VBox>
 
@@ -133,9 +150,11 @@
                                style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                         <TextField fx:id="txtCiudad"
                                    promptText="ej. Sevilla"
-                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                                   style="-fx-font-size: 15; -fx-padding: 12 14;
+                                          -fx-background-radius: 8; -fx-border-radius: 8;
+                                          -fx-border-color: #E5E7EB; -fx-border-width: 1;"/>
                         <Label text="💡 Escribe la ciudad para mejorar las búsquedas de ubicación"
-                               style="-fx-font-size: 12; -fx-text-fill: #6B7280;"/>
+                               style="-fx-font-size: 12; -fx-text-fill: #6B7280; -fx-font-style: italic;"/>
                     </VBox>
 
                     <!-- Aforo -->
@@ -145,7 +164,9 @@
                         <TextField fx:id="txtAforo"
                                    promptText="ej. 20"
                                    prefWidth="150"
-                                   style="-fx-font-size: 15; -fx-padding: 10 14;"/>
+                                   style="-fx-font-size: 15; -fx-padding: 12 14;
+                                          -fx-background-radius: 8; -fx-border-radius: 8;
+                                          -fx-border-color: #E5E7EB; -fx-border-width: 1;"/>
                         <Label text="Número de personas que pueden inscribirse"
                                style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
                     </VBox>
@@ -155,15 +176,17 @@
                     <TextField fx:id="txtLongitud" visible="false" managed="false"/>
 
                     <!-- Botones -->
-                    <HBox spacing="12" alignment="CENTER" style="-fx-padding: 16 0 0 0;">
+                    <HBox spacing="12" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
                         <Button text="Cancelar"
                                 onAction="#handleVolver"
                                 style="-fx-background-color: #E5E7EB;
-                                       -fx-text-fill: #222;
+                                       -fx-text-fill: #374151;
                                        -fx-background-radius: 22;
                                        -fx-font-size: 16;
-                                       -fx-padding: 10 32 10 32;"
-                                HBox.hgrow="ALWAYS"/>
+                                       -fx-font-weight: bold;
+                                       -fx-padding: 12 36 12 36;
+                                       -fx-cursor: hand;"
+                                prefWidth="200"/>
 
                         <Button fx:id="btnGuardar"
                                 text="Crear Actividad"
@@ -172,8 +195,10 @@
                                        -fx-text-fill: white;
                                        -fx-background-radius: 22;
                                        -fx-font-size: 16;
-                                       -fx-padding: 10 32 10 32;"
-                                HBox.hgrow="ALWAYS"/>
+                                       -fx-font-weight: bold;
+                                       -fx-padding: 12 36 12 36;
+                                       -fx-cursor: hand;"
+                                prefWidth="200"/>
                     </HBox>
 
                 </VBox>
