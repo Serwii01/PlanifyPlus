@@ -116,7 +116,7 @@
                 <!-- 驴No tienes cuenta? + Reg铆strate -->
                 <HBox spacing="8" alignment="CENTER">
                     <children>
-                        <Label text="!No tienes cuenta?">
+                        <Label text="¿No tienes cuenta?">
                             <font>
                                 <Font size="20.0" />
                             </font>
