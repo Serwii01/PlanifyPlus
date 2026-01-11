@@ -1,5 +1,6 @@
 package com.planify.planifyplus.dto;
 
+import com.planify.planifyplus.util.DistanciaUtil;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -31,16 +32,31 @@ public class UsuarioDTO {
     @Column(length = 100)
     private String ciudad;
 
+    // ================== NUEVO: COORDENADAS ==================
+    @Column(nullable = false)
+    private double latitud = 0.0;
+
+    @Column(nullable = false)
+    private double longitud = 0.0;
+    // ========================================================
+
     @Column(name="creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
-    // ================== NUEVO: DENUNCIAS (RELACIÓN) ==================
-
-    /**
-     * Aquí guardo las denuncias que ha hecho este usuario.
-     * Lo necesito para que un usuario no pueda denunciar la misma actividad dos veces,
-     * incluso aunque cierre y abra la app.
-     */
+    // ================== DENUNCIAS (RELACIÓN) ==================
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DenunciaActividadDTO> denuncias = new ArrayList<>();
+
+    // ================== MÉTODO PERSONALIZADO ==================
+    /**
+     * Al establecer la ciudad, automáticamente se asignan las coordenadas del centro
+     */
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
+        if (ciudad != null && !ciudad.isEmpty()) {
+            double[] coords = DistanciaUtil.getCoordenadasCiudad(ciudad);
+            this.latitud = coords[0];
+            this.longitud = coords[1];
+        }
+    }
 }
