@@ -3,6 +3,7 @@ package com.planify.planifyplus.controller;
 import com.planify.planifyplus.dao.ActividadDAO;
 import com.planify.planifyplus.dao.InscripcionDAO;
 import com.planify.planifyplus.dto.ActividadDTO;
+import com.planify.planifyplus.util.AlertUtil;
 import com.planify.planifyplus.util.Sesion;
 import com.planify.planifyplus.util.ViewUtil;
 import com.planify.planifyplus.util.WindowUtil;
@@ -86,7 +87,6 @@ public class InicioController {
         contenedorUsuario.getChildren().clear();
         List<ActividadDTO> denunciadas = actividadDAO.obtenerDenunciadasOrdenadas();
 
-        // Opcional: mensaje si no hay
         if (denunciadas.isEmpty()) {
             Label lbl = new Label("No hay actividades denunciadas.");
             lbl.setStyle("-fx-text-fill: #6B7280; -fx-padding: 12;");
@@ -266,7 +266,7 @@ public class InicioController {
 
         vbox.getChildren().addAll(hTituloTipo, lblDesc, lblCiudadAct, hFechaAforo, hBoton);
 
-        // ✅ IMPORTANTE: el click de abrir detalle solo si no has pulsado un botón (ya lo consumimos arriba)
+        // abrir detalle solo si no se pulsó botón (ya consumimos arriba)
         vbox.setOnMouseClicked(e -> abrirDetalleActividad(act));
 
         return vbox;
@@ -296,26 +296,25 @@ public class InicioController {
     }
 
     private void onEliminarActividadUsuario(ActividadDTO act) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Eliminar actividad");
-        alert.setHeaderText("¿Eliminar tu actividad?");
-        alert.setContentText("Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada.");
+        boolean confirmar = AlertUtil.confirm(
+                "Eliminar actividad",
+                "Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada."
+        );
 
-        ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
-        ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(btnCancelar, btnEliminar);
+        if (!confirmar) return;
 
-        ButtonType resultado = alert.showAndWait().orElse(btnCancelar);
-        if (resultado == btnEliminar) {
+        try {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
             cargarPanelDerechoSegunRol();
 
-            Alert ok = new Alert(Alert.AlertType.INFORMATION);
-            ok.setTitle("Actividad eliminada");
-            ok.setHeaderText(null);
-            ok.setContentText("La actividad \"" + act.getTitulo() + "\" ha sido eliminada correctamente.");
-            ok.showAndWait();
+            AlertUtil.info(
+                    "Actividad eliminada",
+                    "La actividad \"" + act.getTitulo() + "\" ha sido eliminada correctamente."
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarError("No se pudo eliminar la actividad.");
         }
     }
 
@@ -340,7 +339,10 @@ public class InicioController {
         }
     }
 
-    private String capitalize(String str) { return str.substring(0, 1).toUpperCase() + str.substring(1); }
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
 
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
@@ -413,6 +415,7 @@ public class InicioController {
 
     private void configurarUIRol() {
         boolean esAdmin = Sesion.esAdmin();
+
         if (lblAdminBadge != null) {
             lblAdminBadge.setVisible(esAdmin);
             lblAdminBadge.setManaged(esAdmin);
@@ -423,8 +426,9 @@ public class InicioController {
         }
 
         if (btnCrearActividad != null) {
-            btnCrearActividad.setVisible(Sesion.haySesion() && !esAdmin);
-            btnCrearActividad.setManaged(Sesion.haySesion() && !esAdmin);
+            boolean mostrar = Sesion.haySesion() && !esAdmin;
+            btnCrearActividad.setVisible(mostrar);
+            btnCrearActividad.setManaged(mostrar);
         }
 
         if (cmbDistancia != null) {
@@ -445,28 +449,24 @@ public class InicioController {
     private void onEliminarActividad(ActividadDTO act) {
         if (!Sesion.esAdmin()) return;
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Eliminar actividad");
-        alert.setHeaderText("¿Eliminar actividad?");
-        alert.setContentText("Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada.");
+        boolean confirmar = AlertUtil.confirm(
+                "Eliminar actividad",
+                "Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada."
+        );
 
-        ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
-        ButtonType btnEliminar = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(btnCancelar, btnEliminar);
+        if (!confirmar) return;
 
-        ButtonType resultado = alert.showAndWait().orElse(btnCancelar);
-        if (resultado == btnEliminar) {
+        try {
             actividadDAO.eliminarPorId(act.getId());
             cargarActividadesComunidad();
             cargarPanelDerechoSegunRol();
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarError("No se pudo eliminar la actividad.");
         }
     }
 
     private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
+        AlertUtil.error("Error", mensaje);
     }
 }
