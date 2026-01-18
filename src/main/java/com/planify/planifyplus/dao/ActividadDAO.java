@@ -11,12 +11,18 @@ import jakarta.persistence.TypedQuery;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DAO de actividades (consultas y operaciones básicas de persistencia).
+ */
 public class ActividadDAO {
 
     // ============================================================
     //   CONSULTAS
     // ============================================================
 
+    /**
+     * Devuelve todas las actividades ordenadas por fecha.
+     */
     public List<ActividadDTO> obtenerTodas() {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -29,6 +35,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Lista de actividades marcadas como predeterminadas.
+     */
     public List<ActividadDTO> obtenerPredeterminadas() {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -43,6 +52,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Lista de actividades creadas por usuarios (no predeterminadas).
+     */
     public List<ActividadDTO> obtenerNoPredeterminadas() {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -57,6 +69,11 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Actividades creadas por un usuario concreto.
+     *
+     * @param idUsuario id del creador
+     */
     public List<ActividadDTO> obtenerCreadasPorUsuario(long idUsuario) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -74,6 +91,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Actividades con denuncias, ordenadas por número de denuncias.
+     */
     public List<ActividadDTO> obtenerDenunciadasOrdenadas() {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -88,6 +108,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Número total de actividades.
+     */
     public long contar() {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -98,6 +121,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Número de actividades predeterminadas.
+     */
     public long contarPredeterminadas() {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -115,6 +141,11 @@ public class ActividadDAO {
     //   ESCRITURAS
     // ============================================================
 
+    /**
+     * Guarda una actividad (persist si es nueva, merge si ya existe).
+     *
+     * @param actividad entidad a guardar
+     */
     public void guardar(ActividadDTO actividad) {
         EntityManager em = ConexionDB.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -132,6 +163,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Elimina todas las actividades predeterminadas junto con sus relaciones (inscripciones/denuncias).
+     */
     public void eliminarTodasPredeterminadas() {
         EntityManager em = ConexionDB.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -144,23 +178,19 @@ public class ActividadDAO {
                     Long.class
             ).getResultList();
 
-            // Si no hay actividades predeterminadas, no hacer nada
             if (idsPredeterminadas.isEmpty()) {
                 tx.commit();
                 return;
             }
 
-            // 1. Eliminar inscripciones usando los IDs
             em.createQuery(
                     "DELETE FROM InscripcionDTO i WHERE i.actividad.id IN :ids"
             ).setParameter("ids", idsPredeterminadas).executeUpdate();
 
-            // 2. Eliminar denuncias usando los IDs
             em.createQuery(
                     "DELETE FROM DenunciaActividadDTO d WHERE d.actividad.id IN :ids"
             ).setParameter("ids", idsPredeterminadas).executeUpdate();
 
-            // 3. Eliminar las actividades
             em.createQuery(
                     "DELETE FROM ActividadDTO a WHERE a.id IN :ids"
             ).setParameter("ids", idsPredeterminadas).executeUpdate();
@@ -177,9 +207,11 @@ public class ActividadDAO {
         }
     }
 
-
-
-
+    /**
+     * Elimina una actividad por id, incluyendo relaciones dependientes.
+     *
+     * @param id id de la actividad
+     */
     public void eliminarPorId(Long id) {
         if (id == null) return;
 
@@ -189,17 +221,14 @@ public class ActividadDAO {
         try {
             tx.begin();
 
-            // 1) Borrar denuncias asociadas
             em.createQuery("DELETE FROM DenunciaActividadDTO d WHERE d.actividad.id = :id")
                     .setParameter("id", id)
                     .executeUpdate();
 
-            // 2) Borrar inscripciones asociadas
             em.createQuery("DELETE FROM InscripcionDTO i WHERE i.actividad.id = :id")
                     .setParameter("id", id)
                     .executeUpdate();
 
-            // 3) Borrar actividad
             ActividadDTO act = em.find(ActividadDTO.class, id);
             if (act != null) em.remove(act);
 
@@ -212,6 +241,11 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Incrementa el contador de denuncias de una actividad con bloqueo pesimista.
+     *
+     * @param idActividad id de la actividad
+     */
     public void incrementarDenuncias(Long idActividad) {
         if (idActividad == null) return;
 
@@ -236,15 +270,20 @@ public class ActividadDAO {
         }
     }
 
-    // Mantengo el método por compatibilidad con lo que tengáis llamado
+    /**
+     * Método mantenido por compatibilidad (no mantiene EntityManager abierto).
+     */
     public void cerrar() {
-        // NO-OP (ya no mantenemos EM abierto)
+        // NO-OP
     }
 
     // ============================================================
-    //   Denuncia persistente (por si lo sigues usando)
+    //   Denuncia persistente (compatibilidad)
     // ============================================================
 
+    /**
+     * Comprueba si un usuario ya denunció una actividad.
+     */
     public boolean usuarioYaDenuncio(long idUsuario, long idActividad) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -262,6 +301,9 @@ public class ActividadDAO {
         }
     }
 
+    /**
+     * Registra una denuncia si no existe y actualiza el contador de la actividad.
+     */
     public void denunciarActividad(long idUsuario, long idActividad) {
         EntityManager em = ConexionDB.getEntityManager();
         EntityTransaction tx = em.getTransaction();

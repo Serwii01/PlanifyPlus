@@ -6,10 +6,17 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
+/**
+ * DAO para operaciones de usuarios.
+ */
 public class UsuarioDAO {
 
-    // ================== MÉTODOS QUE YA TENÍAMOS ==================
-
+    /**
+     * Comprueba si existe un email en la base de datos.
+     *
+     * @param email correo a comprobar
+     * @return true si ya está registrado
+     */
     public boolean existeEmail(String email) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -24,7 +31,11 @@ public class UsuarioDAO {
         }
     }
 
-    /** Inserta el usuario en BD (asume que ya has validado reglas en el controller). */
+    /**
+     * Inserta un usuario en base de datos.
+     *
+     * @param usuario usuario a persistir
+     */
     public void crear(UsuarioDTO usuario) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -39,6 +50,12 @@ public class UsuarioDAO {
         }
     }
 
+    /**
+     * Busca un usuario por email.
+     *
+     * @param email email a buscar
+     * @return usuario encontrado o null si no existe
+     */
     public UsuarioDTO buscarPorEmail(String email) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -51,7 +68,7 @@ public class UsuarioDAO {
             try {
                 return q.getSingleResult();
             } catch (NoResultException ex) {
-                return null; // no existe
+                return null;
             }
 
         } finally {
@@ -60,7 +77,11 @@ public class UsuarioDAO {
     }
 
     /**
-     * Valida las credenciales: devuelve el usuario si email+contraseña son correctos.
+     * Valida credenciales y devuelve el usuario si coinciden.
+     *
+     * @param email correo
+     * @param contrasena contraseña
+     * @return usuario o null si no coincide
      */
     public UsuarioDTO validarLogin(String email, String contrasena) {
         EntityManager em = ConexionDB.getEntityManager();
@@ -74,9 +95,9 @@ public class UsuarioDAO {
             q.setParameter("c", contrasena);
 
             try {
-                return q.getSingleResult();  // credenciales válidas
+                return q.getSingleResult();
             } catch (NoResultException ex) {
-                return null; // incorrecto
+                return null;
             }
 
         } finally {
@@ -84,11 +105,11 @@ public class UsuarioDAO {
         }
     }
 
-    // ================== MÉTODOS NUEVOS PARA PERFIL ==================
-
     /**
-     * Obtiene un usuario por su ID.
-     * Útil para cargar los datos en Perfil y Configuración de perfil.
+     * Obtiene un usuario por id.
+     *
+     * @param id id del usuario
+     * @return usuario o null si no existe
      */
     public UsuarioDTO obtenerPorId(long id) {
         EntityManager em = ConexionDB.getEntityManager();
@@ -100,14 +121,15 @@ public class UsuarioDAO {
     }
 
     /**
-     * Actualiza los datos de un usuario existente.
-     * Se usa desde ConfPerfilController al guardar cambios.
+     * Actualiza un usuario existente.
+     *
+     * @param usuario usuario con cambios
      */
     public void actualizar(UsuarioDTO usuario) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
             em.getTransaction().begin();
-            em.merge(usuario);   // actualiza el registro existente
+            em.merge(usuario);
             em.getTransaction().commit();
         } catch (RuntimeException ex) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -116,5 +138,4 @@ public class UsuarioDAO {
             em.close();
         }
     }
-
 }

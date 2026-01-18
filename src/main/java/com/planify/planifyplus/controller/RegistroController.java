@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * Controlador de la pantalla de registro.
+ */
 public class RegistroController {
 
     @FXML private TextField txtNombre;
@@ -26,9 +29,13 @@ public class RegistroController {
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
+    /** Patrón simple para validar emails. */
     private static final Pattern EMAIL_REGEX =
             Pattern.compile("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
 
+    /**
+     * Inicializa el formulario.
+     */
     @FXML
     public void initialize() {
         cmbCiudad.setItems(FXCollections.observableArrayList(
@@ -36,16 +43,25 @@ public class RegistroController {
         ));
     }
 
+    /**
+     * Vuelve a la pantalla de inicio.
+     */
     @FXML
     private void onIrInicio() {
         go("/vistas/Inicio.fxml");
     }
 
+    /**
+     * Abre la pantalla de login.
+     */
     @FXML
     private void onIrLogin() {
         go("/vistas/Login.fxml");
     }
 
+    /**
+     * Valida el formulario y crea el usuario.
+     */
     @FXML
     private void onRegistrarse() {
         String nombre  = txtNombre.getText().trim();
@@ -95,6 +111,11 @@ public class RegistroController {
         }
     }
 
+    /**
+     * Cambia la escena al FXML indicado.
+     *
+     * @param fxmlPath ruta del FXML
+     */
     private void go(String fxmlPath) {
         try {
             Stage stage = (Stage) btnRegistrarse.getScene().getWindow();

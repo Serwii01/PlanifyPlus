@@ -10,9 +10,18 @@ import jakarta.persistence.TypedQuery;
 
 import java.time.LocalDateTime;
 
+/**
+ * DAO para gestionar denuncias de actividades.
+ */
 public class DenunciaActividadDAO {
 
-    // Compruebo si ya existe una denuncia para (usuario, actividad)
+    /**
+     * Comprueba si ya existe una denuncia para el par (usuario, actividad).
+     *
+     * @param idUsuario   id del usuario
+     * @param idActividad id de la actividad
+     * @return true si ya existe, false en caso contrario
+     */
     public boolean existeDenuncia(long idUsuario, long idActividad) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -30,7 +39,12 @@ public class DenunciaActividadDAO {
         }
     }
 
-    // Creo la denuncia en la tabla intermedia
+    /**
+     * Crea la denuncia si no existía previamente.
+     *
+     * @param idUsuario   id del usuario
+     * @param idActividad id de la actividad
+     */
     public void crearDenuncia(long idUsuario, long idActividad) {
         EntityManager em = ConexionDB.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -38,7 +52,6 @@ public class DenunciaActividadDAO {
         try {
             tx.begin();
 
-            // Si ya existe, no hago nada
             TypedQuery<Long> q = em.createQuery(
                     "SELECT COUNT(d.id) FROM DenunciaActividadDTO d " +
                             "WHERE d.usuario.id = :u AND d.actividad.id = :a",
@@ -72,7 +85,9 @@ public class DenunciaActividadDAO {
         }
     }
 
-    // Compatibilidad: antes cerraba el EM fijo; ahora no hace falta.
+    /**
+     * Método mantenido por compatibilidad (no mantiene recursos abiertos).
+     */
     public void cerrar() {
         // NO-OP
     }

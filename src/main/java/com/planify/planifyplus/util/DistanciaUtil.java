@@ -3,13 +3,17 @@ package com.planify.planifyplus.util;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Utilidad para trabajar con coordenadas y distancias entre ubicaciones.
+ */
 public class DistanciaUtil {
 
-    // Coordenadas del centro de las ciudades
+    /**
+     * Coordenadas (lat, lon) del centro de algunas ciudades.
+     */
     private static final Map<String, double[]> COORDENADAS_CIUDADES = new HashMap<>();
 
     static {
-        // [latitud, longitud]
         COORDENADAS_CIUDADES.put("Sevilla", new double[]{37.3891, -5.9845});
         COORDENADAS_CIUDADES.put("Madrid", new double[]{40.4168, -3.7038});
         COORDENADAS_CIUDADES.put("Barcelona", new double[]{41.3851, 2.1734});
@@ -20,15 +24,19 @@ public class DistanciaUtil {
     }
 
     /**
-     * Obtiene las coordenadas del centro de una ciudad
+     * Devuelve las coordenadas asociadas a una ciudad.
+     *
+     * @param ciudad nombre de la ciudad
+     * @return array {latitud, longitud}
      */
     public static double[] getCoordenadasCiudad(String ciudad) {
         return COORDENADAS_CIUDADES.getOrDefault(ciudad, new double[]{0.0, 0.0});
     }
 
     /**
-     * Calcula la distancia entre dos puntos usando la fórmula de Haversine
-     * @return distancia en kilómetros
+     * Calcula la distancia entre dos puntos usando Haversine.
+     *
+     * @return distancia aproximada en kilómetros
      */
     public static double calcularDistancia(double lat1, double lon1, double lat2, double lon2) {
         final int RADIO_TIERRA_KM = 6371;

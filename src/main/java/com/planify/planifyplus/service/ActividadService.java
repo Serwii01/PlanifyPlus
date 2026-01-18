@@ -7,24 +7,26 @@ import com.planify.planifyplus.dto.TipoActividad;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Servicio para crear y mantener las actividades predeterminadas.
+ */
 public class ActividadService {
 
     private ActividadDAO actividadDAO = new ActividadDAO();
 
+    /**
+     * Reinicia las actividades predeterminadas y crea un conjunto nuevo con fechas futuras.
+     */
     public void inicializarActividadesPredeterminadas() {
-        // ✅ 1. Limpiar SIEMPRE las actividades predeterminadas existentes
         actividadDAO.eliminarTodasPredeterminadas();
 
-        // ✅ 2. Verificar que realmente se eliminaron
         if (actividadDAO.contarPredeterminadas() > 0) {
             System.err.println("⚠️ Error: No se pudieron eliminar las actividades predeterminadas");
             return;
         }
 
-        // ✅ 3. Obtener fecha actual UNA SOLA VEZ
         LocalDateTime ahora = LocalDateTime.now();
 
-        // ✅ 4. Crear actividades con fechas futuras
         crearActividadPredeterminada("Partido de fútbol",
                 "Liga amistosa en campo grande. ¡Forma tu equipo!",
                 TipoActividad.DEPORTIVA,
@@ -98,6 +100,9 @@ public class ActividadService {
         System.out.println("✅ Actividades predeterminadas creadas correctamente con fechas futuras");
     }
 
+    /**
+     * Crea y persiste una actividad marcada como predeterminada.
+     */
     private void crearActividadPredeterminada(String titulo,
                                               String descripcion,
                                               TipoActividad tipo,
@@ -112,7 +117,7 @@ public class ActividadService {
         act.setTitulo(titulo != null ? titulo : "Sin Título");
         act.setDescripcion(descripcion != null ? descripcion : "Sin descripción");
         act.setTipo(tipo != null ? tipo : TipoActividad.TALLER);
-        act.setFechaHoraInicio(fechaHora); // ✅ Fecha calculada desde 'ahora'
+        act.setFechaHoraInicio(fechaHora);
         act.setUbicacion(ubicacion != null ? ubicacion : "Ubicación desconocida");
         act.setCiudad(ciudad != null ? ciudad : "Ciudad ejemplo");
         act.setLatitud(BigDecimal.valueOf(latitud));
@@ -124,10 +129,16 @@ public class ActividadService {
         actividadDAO.guardar(act);
     }
 
+    /**
+     * Elimina todas las actividades predeterminadas existentes.
+     */
     public void limpiarActividadesPredeterminadas() {
         actividadDAO.eliminarTodasPredeterminadas();
     }
 
+    /**
+     * Método de cierre (compatibilidad).
+     */
     public void cerrar() {
         actividadDAO.cerrar();
     }

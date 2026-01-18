@@ -2,7 +2,7 @@ package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.UsuarioDAO;
 import com.planify.planifyplus.dto.UsuarioDTO;
-import com.planify.planifyplus.util.AlertUtil;  // ← NUEVO IMPORT
+import com.planify.planifyplus.util.AlertUtil;
 import com.planify.planifyplus.util.Sesion;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -18,28 +18,23 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+/**
+ * Controlador de configuración/edición del perfil del usuario.
+ */
 public class ConfPerfilController {
 
-    @FXML
-    private TextField txtNombre;
-
-    @FXML
-    private TextField txtEmail;
-
-    @FXML
-    private PasswordField txtContrasena;
-
-    @FXML
-    private ComboBox<String> cmbCiudad;
-
-    @FXML
-    private Button btnGuardarCambios;
-
-    @FXML
-    private Button btnCancelar;
+    @FXML private TextField txtNombre;
+    @FXML private TextField txtEmail;
+    @FXML private PasswordField txtContrasena;
+    @FXML private ComboBox<String> cmbCiudad;
+    @FXML private Button btnGuardarCambios;
+    @FXML private Button btnCancelar;
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
+    /**
+     * Inicializa la vista con los datos del usuario en sesión.
+     */
     @FXML
     private void initialize() {
         cmbCiudad.getItems().setAll(
@@ -62,6 +57,11 @@ public class ConfPerfilController {
         }
     }
 
+    /**
+     * Guarda los cambios del perfil tras validar los campos.
+     *
+     * @param event evento del botón
+     */
     @FXML
     private void onGuardarCambios(ActionEvent event) {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
@@ -75,13 +75,11 @@ public class ConfPerfilController {
         String contrasena = txtContrasena.getText();
         String ciudad = cmbCiudad.getValue();
 
-        // Validación campos obligatorios
         if (nombre.isEmpty() || email.isEmpty() || contrasena.isEmpty() || ciudad == null || ciudad.isEmpty()) {
             AlertUtil.error("Campos obligatorios",
                     "Nombre, correo, contraseña y ciudad son obligatorios.");
             return;
         }
-
 
         if (nombre.length() < 2) {
             AlertUtil.error("Nombre inválido",
@@ -89,14 +87,12 @@ public class ConfPerfilController {
             return;
         }
 
-        // Validación longitud contraseña (mínimo 6 caracteres)
         if (contrasena.length() < 6) {
             AlertUtil.error("Contraseña inválida",
                     "La contraseña debe tener al menos 6 caracteres.");
             return;
         }
 
-        // Validación email mejorada con regex
         Pattern emailPattern = Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$");
         if (!emailPattern.matcher(email).matches()) {
             AlertUtil.error("Correo no válido",
@@ -132,21 +128,41 @@ public class ConfPerfilController {
         }
     }
 
+    /**
+     * Cancela la edición y vuelve al perfil.
+     *
+     * @param event evento del botón
+     */
     @FXML
     private void onCancelar(ActionEvent event) {
         irAPerfil(event);
     }
 
+    /**
+     * Navega al inicio.
+     *
+     * @param event evento del botón
+     */
     @FXML
     private void onIrInicio(ActionEvent event) {
         cambiarEscena("/vistas/Inicio.fxml", event);
     }
 
+    /**
+     * Abre la vista de perfil.
+     *
+     * @param event evento del botón
+     */
     private void irAPerfil(ActionEvent event) {
         cambiarEscena("/vistas/Perfil.fxml", event);
     }
 
-    //  Método genérico: cambia escena + FULL SCREEN REAL
+    /**
+     * Cambia la escena actual al FXML indicado.
+     *
+     * @param fxml  ruta del FXML
+     * @param event evento que origina el cambio
+     */
     private void cambiarEscena(String fxml, ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
@@ -158,14 +174,12 @@ public class ConfPerfilController {
 
             Scene scene = new Scene(root);
 
-            //  si usas CSS global
             try {
                 scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             } catch (Exception ignored) {}
 
             stage.setScene(scene);
 
-            //  Pantalla completa real (no solo maximized)
             stage.setFullScreenExitHint("");
             stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 
@@ -174,10 +188,8 @@ public class ConfPerfilController {
 
         } catch (IOException e) {
             e.printStackTrace();
-            AlertUtil.error("Error",  // ← CAMBIADO A AlertUtil
+            AlertUtil.error("Error",
                     "No se ha podido abrir la nueva pantalla.");
         }
     }
-
-    // ✅ MÉTODO mostrarAlerta ELIMINADO (ya no se usa)
 }

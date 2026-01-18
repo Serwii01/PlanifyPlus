@@ -10,8 +10,18 @@ import jakarta.persistence.NoResultException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DAO para gestionar inscripciones a actividades.
+ */
 public class InscripcionDAO {
 
+    /**
+     * Comprueba si un usuario está inscrito en una actividad.
+     *
+     * @param usuarioId   id del usuario
+     * @param actividadId id de la actividad
+     * @return true si existe inscripción
+     */
     public boolean estaInscrito(long usuarioId, long actividadId) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -29,12 +39,17 @@ public class InscripcionDAO {
         }
     }
 
+    /**
+     * Crea la inscripción del usuario en la actividad (si no existía).
+     *
+     * @param usuario    usuario
+     * @param actividad  actividad
+     */
     public void inscribir(UsuarioDTO usuario, ActividadDTO actividad) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
             em.getTransaction().begin();
 
-            // Evitar duplicados por si acaso (además del UNIQUE)
             Long count = em.createQuery(
                             "SELECT COUNT(i) FROM InscripcionDTO i " +
                                     "WHERE i.usuario.id = :u AND i.actividad.id = :a",
@@ -64,6 +79,12 @@ public class InscripcionDAO {
         }
     }
 
+    /**
+     * Cancela una inscripción (si existe).
+     *
+     * @param usuarioId   id del usuario
+     * @param actividadId id de la actividad
+     */
     public void cancelar(long usuarioId, long actividadId) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -81,7 +102,7 @@ public class InscripcionDAO {
 
                 em.remove(ins);
             } catch (NoResultException ignored) {
-                // Si no existe, no pasa nada
+                // no existe
             }
 
             em.getTransaction().commit();
@@ -93,6 +114,12 @@ public class InscripcionDAO {
         }
     }
 
+    /**
+     * Devuelve el número de inscritos en una actividad.
+     *
+     * @param actividadId id de la actividad
+     * @return total de inscritos
+     */
     public long contarInscritos(long actividadId) {
         EntityManager em = ConexionDB.getEntityManager();
         try {
@@ -108,6 +135,12 @@ public class InscripcionDAO {
         }
     }
 
+    /**
+     * Lista las actividades en las que está inscrito un usuario.
+     *
+     * @param usuarioId id del usuario
+     * @return actividades inscritas
+     */
     public List<ActividadDTO> obtenerActividadesInscritas(long usuarioId) {
         EntityManager em = ConexionDB.getEntityManager();
         try {

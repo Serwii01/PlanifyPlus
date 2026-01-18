@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Controlador de la pantalla de perfil.
+ */
 public class PerfilController {
 
     @FXML private Button btnHomePerfil;
@@ -46,9 +49,11 @@ public class PerfilController {
 
     private YearMonth mesActual = YearMonth.now();
 
+    /**
+     * Inicialización del controlador (JavaFX).
+     */
     @FXML
     public void initialize() {
-        // Para que el VBox dentro del ScrollPane ocupe todo el ancho
         if (vboxActividadesInscritas != null) {
             vboxActividadesInscritas.setFillWidth(true);
             vboxActividadesInscritas.setMaxWidth(Double.MAX_VALUE);
@@ -62,6 +67,9 @@ public class PerfilController {
         cargarCalendario(mesActual);
     }
 
+    /**
+     * Carga datos básicos del usuario en sesión.
+     */
     private void cargarDatosUsuario() {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
 
@@ -75,6 +83,12 @@ public class PerfilController {
         lblEmailUsuario.setText(usuario.getEmail());
     }
 
+    /**
+     * Alterna el estado vacío del panel de inscripciones.
+     *
+     * @param visible true para mostrar el estado vacío
+     * @param texto   texto a mostrar (opcional)
+     */
     private void setEmptyInscritasVisible(boolean visible, String texto) {
         if (lblEmptyInscritas != null && texto != null) {
             lblEmptyInscritas.setText(texto);
@@ -91,6 +105,9 @@ public class PerfilController {
         }
     }
 
+    /**
+     * Carga las actividades inscritas y las muestra como tarjetas.
+     */
     private void cargarActividadesInscritasComoCards() {
         if (vboxActividadesInscritas != null) {
             vboxActividadesInscritas.getChildren().clear();
@@ -118,12 +135,14 @@ public class PerfilController {
             vboxActividadesInscritas.getChildren().add(card);
         }
 
-        // ✅ MUY IMPORTANTE: cuando se cargan las actividades, repintamos el calendario
         cargarCalendario(mesActual);
     }
 
     /**
-     * Card estilo Inicio (adaptada a Perfil)
+     * Crea una tarjeta de actividad para el listado del perfil.
+     *
+     * @param act actividad
+     * @return nodo listo para pintar
      */
     private Pane crearCardActividad(ActividadDTO act) {
         VBox vbox = new VBox(12);
@@ -206,7 +225,6 @@ public class PerfilController {
                 inscripcionDAO.inscribir(Sesion.getUsuarioActual(), act);
             }
 
-            // refrescar lista y calendario
             cargarActividadesInscritasComoCards();
         });
 
@@ -219,7 +237,10 @@ public class PerfilController {
     }
 
     /**
-     * ✅ Devuelve los días (número) del mesActual donde el usuario tiene actividades inscritas
+     * Devuelve los días del mes en los que el usuario tiene alguna actividad.
+     *
+     * @param mes mes a comprobar
+     * @return conjunto de días (1..31)
      */
     private Set<Integer> getDiasConActividadesEnMes(YearMonth mes) {
         Set<Integer> dias = new HashSet<>();
@@ -240,12 +261,16 @@ public class PerfilController {
         return dias;
     }
 
+    /**
+     * Pinta el calendario del mes indicado y marca los días con actividad.
+     *
+     * @param mes mes a mostrar
+     */
     private void cargarCalendario(YearMonth mes) {
         String nombreMes = mes.getMonth().toString().toLowerCase();
         nombreMes = nombreMes.substring(0, 1).toUpperCase() + nombreMes.substring(1);
         lblMesAnio.setText(nombreMes + " " + mes.getYear());
 
-        // Mantener la cabecera (row=0) y limpiar el resto
         gridCalendario.getChildren().removeIf(n -> {
             Integer r = GridPane.getRowIndex(n);
             return r != null && r > 0;
@@ -258,7 +283,7 @@ public class PerfilController {
 
         int offset = primerDiaMes.getDayOfWeek().getValue() - 1;
 
-        int fila = 1; // row=0 es cabecera (Mo Tu We...)
+        int fila = 1;
         int col = offset;
 
         for (int dia = 1; dia <= diasMes; dia++) {
@@ -269,7 +294,6 @@ public class PerfilController {
             boolean tieneActividad = diasConActividades.contains(dia);
 
             if (tieneActividad) {
-                // ✅ AZUL + CÍRCULO
                 lblDia.setStyle(
                         "-fx-alignment: center;" +
                                 "-fx-background-color: #4C8DF6;" +
@@ -296,6 +320,9 @@ public class PerfilController {
         }
     }
 
+    /**
+     * Abre la vista de detalle de una actividad.
+     */
     private void abrirDetalleActividad(ActividadDTO actividad) {
         try {
             var loader = ViewUtil.loaderFXML(getClass(), "/vistas/Actividad.fxml");
@@ -317,12 +344,18 @@ public class PerfilController {
         }
     }
 
+    /**
+     * Muestra el mes anterior en el calendario.
+     */
     @FXML
     private void onMesAnterior() {
         mesActual = mesActual.minusMonths(1);
         cargarCalendario(mesActual);
     }
 
+    /**
+     * Muestra el mes siguiente en el calendario.
+     */
     @FXML
     private void onMesSiguiente() {
         mesActual = mesActual.plusMonths(1);
@@ -338,6 +371,9 @@ public class PerfilController {
     @FXML
     private void onExplorarActividades() { cambiarEscena("/vistas/Inicio.fxml"); }
 
+    /**
+     * Cambia la escena a la vista indicada.
+     */
     private void cambiarEscena(String rutaFXML) {
         try {
             Stage stage = (Stage) btnHomePerfil.getScene().getWindow();
@@ -354,11 +390,17 @@ public class PerfilController {
         }
     }
 
+    /**
+     * Capitaliza la primera letra.
+     */
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
+    /**
+     * Color asociado al tipo de actividad.
+     */
     private String getTipoColor(String tipo) {
         return "DEPORTIVA".equals(tipo) ? "#dbeafe"
                 : "CULTURAL".equals(tipo) ? "#e9d5ff"

@@ -9,18 +9,26 @@ import javafx.stage.Stage;
 
 import java.util.Optional;
 
+/**
+ * Utilidad para mostrar alertas JavaFX con estilos e icono de la aplicación.
+ */
 public class AlertUtil {
 
+    /** Ruta del CSS global usado por los diálogos. */
     private static final String CSS_PATH = "/css/styles.css";
+
+    /** Icono usado en el diálogo y en la ventana. */
     private static final String ICON_PATH = "/img/images.png";
 
+    /**
+     * Crea una alerta base con el estilo e icono de la aplicación.
+     */
     private static Alert baseAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
 
-        // Icono de la app
         ImageView icon = new ImageView(
                 new Image(AlertUtil.class.getResourceAsStream(ICON_PATH))
         );
@@ -28,17 +36,14 @@ public class AlertUtil {
         icon.setFitHeight(48);
         alert.setGraphic(icon);
 
-        // Icono en la ventana
         Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
         stage.getIcons().add(new Image(AlertUtil.class.getResourceAsStream(ICON_PATH)));
 
-        // CSS de la app
         alert.getDialogPane().getStylesheets().add(
                 AlertUtil.class.getResource(CSS_PATH).toExternalForm()
         );
         alert.getDialogPane().getStyleClass().add("planify-alert");
 
-        // Estilado del botón OK (para alerts normales INFO/ERROR)
         Button okBtn = (Button) alert.getDialogPane().lookupButton(ButtonType.OK);
         if (okBtn != null) {
             okBtn.getStyleClass().add("planify-alert-button");
@@ -47,18 +52,25 @@ public class AlertUtil {
         return alert;
     }
 
-    // ==========================
-    // TIPOS DE ALERTA
-    // ==========================
-
+    /**
+     * Muestra una alerta informativa.
+     */
     public static void info(String title, String message) {
         baseAlert(Alert.AlertType.INFORMATION, title, message).showAndWait();
     }
 
+    /**
+     * Muestra una alerta de error.
+     */
     public static void error(String title, String message) {
         baseAlert(Alert.AlertType.ERROR, title, message).showAndWait();
     }
 
+    /**
+     * Muestra una alerta de confirmación (Aceptar/Cancelar).
+     *
+     * @return true si el usuario acepta
+     */
     public static boolean confirm(String title, String message) {
         Alert alert = baseAlert(Alert.AlertType.CONFIRMATION, title, message);
 
@@ -67,7 +79,6 @@ public class AlertUtil {
 
         alert.getButtonTypes().setAll(cancelar, aceptar);
 
-        // ✅ Estilos botones (ACEPTAR y CANCELAR)
         Button btnAceptar = (Button) alert.getDialogPane().lookupButton(aceptar);
         if (btnAceptar != null) {
             btnAceptar.getStyleClass().add("planify-alert-button");

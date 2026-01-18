@@ -8,9 +8,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entidad que representa a un usuario de la aplicación.
+ */
 @Data
 @Entity
-@Table(name="usuarios")
+@Table(name = "usuarios")
 public class UsuarioDTO {
 
     @Id
@@ -32,24 +35,28 @@ public class UsuarioDTO {
     @Column(length = 100)
     private String ciudad;
 
-    // ================== NUEVO: COORDENADAS ==================
+    /**
+     * Coordenadas asociadas a la ciudad del usuario.
+     */
     @Column(nullable = false)
     private double latitud = 0.0;
 
     @Column(nullable = false)
     private double longitud = 0.0;
-    // ========================================================
 
-    @Column(name="creado_en", nullable = false)
+    @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
-    // ================== DENUNCIAS (RELACIÓN) ==================
+    /**
+     * Denuncias realizadas por el usuario.
+     */
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DenunciaActividadDTO> denuncias = new ArrayList<>();
 
-    // ================== MÉTODO PERSONALIZADO ==================
     /**
-     * Al establecer la ciudad, automáticamente se asignan las coordenadas del centro
+     * Asigna la ciudad y actualiza automáticamente las coordenadas.
+     *
+     * @param ciudad ciudad del usuario
      */
     public void setCiudad(String ciudad) {
         this.ciudad = ciudad;

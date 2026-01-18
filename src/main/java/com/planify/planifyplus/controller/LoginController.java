@@ -16,6 +16,9 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+/**
+ * Controlador de la pantalla de inicio de sesión.
+ */
 public class LoginController {
 
     @FXML private TextField userLogin;
@@ -25,6 +28,11 @@ public class LoginController {
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
+    /**
+     * Valida credenciales e inicia sesión si son correctas.
+     *
+     * @param e evento del botón
+     */
     @FXML
     private void onIniciarSesion(ActionEvent e) {
         String email = userLogin.getText().trim();
@@ -66,16 +74,31 @@ public class LoginController {
         }
     }
 
+    /**
+     * Navega a la pantalla de registro.
+     *
+     * @param e evento del enlace/botón
+     */
     @FXML
     private void onIrRegistro(ActionEvent e) {
         go("/vistas/Registro.fxml");
     }
 
+    /**
+     * Vuelve a la pantalla de inicio.
+     *
+     * @param e evento del botón
+     */
     @FXML
     private void onIrInicio(ActionEvent e) {
         go("/vistas/Inicio.fxml");
     }
 
+    /**
+     * Cambia la escena al FXML indicado.
+     *
+     * @param fxmlPath ruta del FXML
+     */
     private void go(String fxmlPath) {
         try {
             Stage stage = (Stage) iniciarSesionBoton.getScene().getWindow();

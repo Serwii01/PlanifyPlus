@@ -25,6 +25,9 @@ import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+/**
+ * Controlador de la vista de detalle de una actividad.
+ */
 public class ActividadController {
 
     @FXML private WebView webViewMap;
@@ -42,8 +45,10 @@ public class ActividadController {
     @FXML private Button btnDenunciar;
     @FXML private Button btnVolver;
 
+    /** Actividad mostrada actualmente. */
     private ActividadDTO actividad;
 
+    /** Motor JS del WebView para el mapa. */
     private WebEngine mapEngine;
     private boolean mapaListo = false;
     private boolean mapaActualizado = false;
@@ -60,12 +65,18 @@ public class ActividadController {
     private final DenunciaActividadDAO denunciaDAO = new DenunciaActividadDAO();
     private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
+    /**
+     * Inicialización del controlador (JavaFX).
+     */
     @FXML
     public void initialize() {
         btnVolver.setOnAction(e -> volverAInicio());
         Platform.runLater(this::initMap);
     }
 
+    /**
+     * Carga el HTML del mapa y deja el WebView listo para recibir coordenadas.
+     */
     private void initMap() {
         if (webViewMap == null) return;
 
@@ -94,7 +105,6 @@ public class ActividadController {
                 System.out.println("webView cargado");
                 mapaListo = true;
 
-                // Llamar a la función de inicialización del HTML
                 Platform.runLater(() -> {
                     try {
                         mapEngine.executeScript("if(typeof window.onWebViewReady === 'function') window.onWebViewReady();");
@@ -111,9 +121,11 @@ public class ActividadController {
         });
     }
 
-
-
-
+    /**
+     * Carga la actividad en pantalla y refresca estado de botones/mapa.
+     *
+     * @param actividad actividad a mostrar
+     */
     public void setActividad(ActividadDTO actividad) {
         this.actividad = actividad;
         mapaActualizado = false;
@@ -139,13 +151,15 @@ public class ActividadController {
             lblPlazas.setText("0 / " + actividad.getAforo() + " personas inscritas");
         }
 
-        // esto es lo que hace que dentro salga "Inscrito" si ya lo estás
         actualizarEstadoInscripcion();
 
         configurarBotonDenunciarSegunSesionYActividad();
         actualizarMapaConActividadConReintento();
     }
 
+    /**
+     * Ajusta el botón de inscripción según sesión, rol y aforo.
+     */
     private void actualizarEstadoInscripcion() {
         boolean loggedIn = Sesion.getUsuarioActual() != null;
 
@@ -205,6 +219,9 @@ public class ActividadController {
         }
     }
 
+    /**
+     * Actualiza el mapa con la ubicación de la actividad, reintentando si el JS aún no está listo.
+     */
     private void actualizarMapaConActividadConReintento() {
         if (!Platform.isFxApplicationThread()) {
             Platform.runLater(this::actualizarMapaConActividadConReintento);
@@ -213,7 +230,6 @@ public class ActividadController {
 
         if (actividad == null || mapEngine == null || !mapaListo || mapaActualizado) return;
 
-        // Verificar que updateMapLocation existe
         boolean existeFuncion = false;
         try {
             Object res = mapEngine.executeScript("typeof window.updateMapLocation");
@@ -232,16 +248,13 @@ public class ActividadController {
 
         try {
             if (actividad.getLatitud() == null || actividad.getLongitud() == null) {
-                // Ubicación por defecto (centro de España)
                 mapEngine.executeScript("window.updateMapLocation(40.4168, -3.7038, 'Ubicación no especificada');");
                 System.out.println("📍 Mostrando ubicación por defecto");
             } else {
-                // Usar coordenadas de la actividad
                 double lat = actividad.getLatitud().doubleValue();
                 double lon = actividad.getLongitud().doubleValue();
                 String label = actividad.getUbicacion() != null ? actividad.getUbicacion() : "Ubicación de la actividad";
 
-                // IMPORTANTE: Usar Locale.US para punto decimal
                 String jsCall = String.format(Locale.US,
                         "window.updateMapLocation(%f, %f, '%s');",
                         lat, lon, label.replace("'", "\\'"));
@@ -259,7 +272,9 @@ public class ActividadController {
         }
     }
 
-
+    /**
+     * Programa un reintento corto para la actualización del mapa.
+     */
     private void reintentarMapa() {
         if (intentosMapa >= MAX_INTENTOS_MAPA) return;
         intentosMapa++;
@@ -269,6 +284,9 @@ public class ActividadController {
         pt.play();
     }
 
+    /**
+     * Configura el botón de denuncia según sesión, rol y si ya existe denuncia.
+     */
     private void configurarBotonDenunciarSegunSesionYActividad() {
         if (btnDenunciar == null) return;
 
@@ -312,6 +330,9 @@ public class ActividadController {
         }
     }
 
+    /**
+     * Registra la denuncia y actualiza el estado del botón.
+     */
     private void manejarDenuncia() {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
         if (usuario == null || actividad == null || actividad.getId() == null || Sesion.esAdmin()) return;
@@ -332,6 +353,9 @@ public class ActividadController {
         btnDenunciar.setText("Denuncia enviada ✓");
     }
 
+    /**
+     * Vuelve a la pantalla de inicio.
+     */
     private void volverAInicio() {
         try {
             Stage stage = (Stage) webViewMap.getScene().getWindow();

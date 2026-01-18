@@ -6,55 +6,73 @@ import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Clase utilitaria para gestionar la sesión del usuario en la aplicación.
+ */
 @Data
 public class Sesion {
 
-    // Usuario que está actualmente logueado
+    /**
+     * Usuario que tiene la sesión iniciada actualmente.
+     */
     private static UsuarioDTO usuarioActual;
 
-    // En este conjunto guardo los IDs de actividades que ya he denunciado en esta sesión
+    /**
+     * Conjunto de actividades denunciadas durante la sesión actual.
+     * Se usa como caché para evitar denuncias duplicadas.
+     */
     private static final Set<Long> actividadesDenunciadas = new HashSet<>();
 
-    // Obtener usuario logueado
+    /**
+     * Devuelve el usuario actual de la sesión.
+     */
     public static UsuarioDTO getUsuarioActual() {
         return usuarioActual;
     }
 
-    // Guardar usuario al iniciar sesión
+    /**
+     * Establece el usuario actual al iniciar sesión.
+     * Limpia el estado asociado a la sesión anterior.
+     */
     public static void setUsuarioActual(UsuarioDTO usuario) {
         usuarioActual = usuario;
-
-        // Cuando cambia el usuario, limpio el "cache" de denuncias de esta sesión
         actividadesDenunciadas.clear();
     }
 
-    // Cerrar sesión
+    /**
+     * Cierra la sesión actual y limpia los datos temporales.
+     */
     public static void cerrarSesion() {
         usuarioActual = null;
-        // Cuando cierro sesión, vacío también las actividades denunciadas
         actividadesDenunciadas.clear();
     }
 
-    // ================== MÉTODOS EXTRA ==================
+    // ================== MÉTODOS DE ESTADO ==================
 
-    /** Indica si hay un usuario con sesión iniciada. */
+    /**
+     * Indica si hay una sesión iniciada.
+     */
     public static boolean haySesion() {
         return usuarioActual != null;
     }
 
-    /** Devuelve el id del usuario logueado o -1 si no hay sesión. */
+    /**
+     * Devuelve el id del usuario en sesión o -1 si no hay sesión.
+     */
     public static long getIdUsuario() {
         return usuarioActual != null ? usuarioActual.getId() : -1;
     }
 
-    /** Devuelve si el usuario actual ES ADMIN. */
+    /**
+     * Indica si el usuario actual tiene rol de administrador.
+     */
     public static boolean esAdmin() {
         return usuarioActual != null && usuarioActual.isEsAdmin();
     }
 
     /**
-     * Actualiza los datos del usuario guardado en sesión después
-     * de modificar el perfil.
+     * Actualiza los datos del usuario almacenado en sesión.
+     * Se utiliza tras modificar el perfil.
      */
     public static void actualizarUsuarioActual(UsuarioDTO usuarioActualizado) {
         if (usuarioActual == null) {
@@ -70,45 +88,34 @@ public class Sesion {
             usuarioActual.setEsAdmin(usuarioActualizado.isEsAdmin());
         } else {
             usuarioActual = usuarioActualizado;
-
-            // Si por lo que sea me cambian el usuario actual,
-            // limpio también el cache de denuncias
             actividadesDenunciadas.clear();
         }
     }
 
-    // ================== DENUNCIAS EN ESTA SESIÓN ==================
+    // ================== DENUNCIAS EN SESIÓN ==================
 
     /**
-     * Con este método compruebo si ya he denunciado esta actividad
-     * en la sesión actual.
+     * Comprueba si una actividad ya ha sido denunciada
+     * durante la sesión actual.
      */
     public static boolean haDenunciadoActividad(Long idActividad) {
-        if (idActividad == null) {
-            return false;
-        }
+        if (idActividad == null) return false;
         return actividadesDenunciadas.contains(idActividad);
     }
 
     /**
-     * Con este método marco que he denunciado una actividad
-     * en la sesión actual.
+     * Marca una actividad como denunciada en la sesión actual.
      */
     public static void marcarActividadDenunciada(Long idActividad) {
-        if (idActividad == null) {
-            return;
-        }
+        if (idActividad == null) return;
         actividadesDenunciadas.add(idActividad);
     }
 
     /**
-     * Con este método marco una lista de actividades como denunciadas
-     * (me servirá cuando cargue desde BD las denuncias del usuario).
+     * Marca varias actividades como denunciadas en la sesión actual.
      */
     public static void marcarActividadesDenunciadas(Set<Long> idsActividades) {
-        if (idsActividades == null) {
-            return;
-        }
+        if (idsActividades == null) return;
         actividadesDenunciadas.addAll(idsActividades);
     }
 }

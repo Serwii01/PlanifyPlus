@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa una denuncia de una actividad por un usuario.
+ */
 @Data
 @Entity
 @Table(
@@ -19,16 +22,23 @@ public class DenunciaActividadDTO {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Usuario que denuncia
+    /**
+     * Usuario que realiza la denuncia.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
     private UsuarioDTO usuario;
 
-    // Actividad denunciada
+    /**
+     * Actividad denunciada.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "actividad_id", nullable = false)
     private ActividadDTO actividad;
 
+    /**
+     * Fecha y hora en la que se registró la denuncia.
+     */
     @Column(name = "fecha_denuncia", nullable = false)
     private LocalDateTime fechaDenuncia;
 }

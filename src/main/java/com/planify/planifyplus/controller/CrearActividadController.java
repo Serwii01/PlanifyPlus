@@ -26,6 +26,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * Controlador de creación/edición de actividades.
+ */
 public class CrearActividadController {
 
     @FXML private TextField txtTitulo;
@@ -45,15 +48,23 @@ public class CrearActividadController {
     private final ActividadDAO actividadDAO = new ActividadDAO();
     private final InscripcionDAO inscripcionDAO = new InscripcionDAO();
 
+    /** Actividad en modo edición (null si se está creando). */
     private ActividadDTO actividadAEditar = null;
+
     private WebEngine webEngine;
 
+    /**
+     * Inicialización del formulario y del buscador de ubicación.
+     */
     @FXML
     public void initialize() {
         cmbTipo.getItems().addAll("DEPORTIVA", "CULTURAL", "TALLER");
         inicializarBuscadorMapa();
     }
 
+    /**
+     * Carga el mapa/buscador y prepara la comunicación con JavaScript.
+     */
     private void inicializarBuscadorMapa() {
         webEngine = webViewBuscador.getEngine();
         webEngine.setJavaScriptEnabled(true);
@@ -89,6 +100,9 @@ public class CrearActividadController {
     private Timeline pollingTimeline;
     private String ultimaUbicacion = "";
 
+    /**
+     * Inicia el refresco periódico de la ubicación elegida en el WebView.
+     */
     private void iniciarPollingUbicacion() {
         if (pollingTimeline != null) pollingTimeline.stop();
 
@@ -102,6 +116,9 @@ public class CrearActividadController {
         pollingTimeline.play();
     }
 
+    /**
+     * Lee la última ubicación seleccionada en el mapa y actualiza los campos.
+     */
     private void verificarUbicacionSeleccionada() {
         try {
             Object ubicacion = webEngine.executeScript(
@@ -132,7 +149,19 @@ public class CrearActividadController {
     }
 
     // ========== JS BRIDGE ==========
+
+    /**
+     * Bridge para recibir eventos desde el JavaScript del mapa.
+     */
     public class JavaScriptBridge {
+
+        /**
+         * Recibe la ubicación elegida y la vuelca en los campos del formulario.
+         *
+         * @param displayName texto visible de la ubicación
+         * @param lat         latitud
+         * @param lon         longitud
+         */
         public void onLocationSelected(String displayName, double lat, double lon) {
             javafx.application.Platform.runLater(() -> {
                 txtUbicacion.setText(displayName);
@@ -143,6 +172,12 @@ public class CrearActividadController {
     }
 
     // ========== EDICIÓN ==========
+
+    /**
+     * Activa el modo edición cargando los datos en el formulario.
+     *
+     * @param actividad actividad a editar
+     */
     public void setActividadParaEditar(ActividadDTO actividad) {
         this.actividadAEditar = actividad;
 
@@ -166,6 +201,10 @@ public class CrearActividadController {
     }
 
     // ========== GUARDAR ==========
+
+    /**
+     * Valida el formulario y guarda la actividad (creación o actualización).
+     */
     @FXML
     private void handleGuardarActividad() {
         if (txtTitulo.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "El título es obligatorio."); return; }
@@ -191,7 +230,6 @@ public class CrearActividadController {
 
             LocalDateTime fechaHora = dpFecha.getValue().atTime(hora, minutos);
 
-            //  NO PERMITIR FECHAS PASADAS O IGUAL A AHORA
             if (!fechaHora.isAfter(LocalDateTime.now())) {
                 AlertUtil.error("Fecha inválida", "La actividad debe tener una fecha y hora futura.");
                 return;
@@ -249,11 +287,17 @@ public class CrearActividadController {
         }
     }
 
+    /**
+     * Vuelve a inicio sin guardar.
+     */
     @FXML
     private void handleVolver() {
         irAInicio();
     }
 
+    /**
+     * Abre la pantalla de inicio.
+     */
     private void irAInicio() {
         try {
             Stage stage = (Stage) btnGuardar.getScene().getWindow();
