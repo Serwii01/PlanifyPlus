@@ -1,4 +1,3 @@
-// src/main/java/com/planify/planifyplus/controller/ActividadController.java
 package com.planify.planifyplus.controller;
 
 import com.planify.planifyplus.dao.ActividadDAO;
@@ -73,28 +72,26 @@ public class ActividadController {
         mapEngine = webViewMap.getEngine();
 
         try {
-            // Cargar tu archivo HTML existente
             URL htmlUrl = getClass().getResource("/API/map-crear-actividad.html");
 
             if (htmlUrl != null) {
                 mapEngine.load(htmlUrl.toExternalForm());
                 System.out.println("✅ Cargando mapa desde: " + htmlUrl);
             } else {
-                System.err.println("❌ No se encontró /API/map-crear-actividad.html");
-                // Fallback: intentar ruta alternativa
+                System.err.println("error");
                 htmlUrl = getClass().getResource("/map-crear-actividad.html");
                 if (htmlUrl != null) {
                     mapEngine.load(htmlUrl.toExternalForm());
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ Error cargando mapa: " + e.getMessage());
+            System.err.println("error cargando mapa: " + e.getMessage());
             e.printStackTrace();
         }
 
         mapEngine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state == Worker.State.SUCCEEDED) {
-                System.out.println("✅ WebView cargado exitosamente");
+                System.out.println("webView cargado");
                 mapaListo = true;
 
                 // Llamar a la función de inicialización del HTML

@@ -23,6 +23,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Controlador principal de la pantalla de inicio de la aplicación.
+ * Gestiona la visualización de actividades, filtros de búsqueda,
+ * navegación y gestión de sesión de usuario.
+ */
 public class InicioController {
 
     @FXML private ImageView logoImage;
@@ -45,6 +50,10 @@ public class InicioController {
     // Lista completa de actividades sin filtros
     private List<ActividadDTO> todasActividadesComunidad = new ArrayList<>();
 
+    /**
+     * Inicializa el controlador.
+     * Configura listeners, carga datos iniciales y ajusta la interfaz según la sesión.
+     */
     public void initialize() {
         var img = getClass().getResource("/img/descarga.png");
         if (img != null) logoImage.setImage(new Image(img.toExternalForm()));
@@ -68,6 +77,10 @@ public class InicioController {
         VBox.setVgrow(scrollActividadesUsuario, Priority.ALWAYS);
     }
 
+    /**
+     * Configura el ComboBox para el filtrado por distancia.
+     * Establece las opciones y el formato de las celdas.
+     */
     private void configurarComboBoxDistancia() {
         List<String> opciones = List.of(
                 "Todas las distancias",
@@ -120,8 +133,10 @@ public class InicioController {
     }
 
 
-
-
+    /**
+     * Carga las actividades de la comunidad desde la base de datos.
+     * Filtra las actividades propias del usuario y aplica los filtros de búsqueda y distancia.
+     */
     private void cargarActividadesComunidad() {
         Long idUsuarioActual = (Sesion.getUsuarioActual() != null)
                 ? Sesion.getUsuarioActual().getId() : null;
@@ -148,38 +163,62 @@ public class InicioController {
         aplicarFiltros();
     }
 
+    /**
+     * Este metodo es el que hace que funcionen los filtros de la pantalla principal.
+     * Básicamente coge todas las actividades que tenemos cargadas y va mirando una a una
+     * si cumple con lo que ha puesto el usuario en el buscador o con la distancia seleccionada.
+     * <p>
+     * Pasos que sigue:
+     * 1. Limpia la pantalla para no duplicar cosas.
+     * 2. Mira si el texto de la actividad coincide con lo que se busca.
+     * 3. Si hay un usuario conectado, calcula la distancia para ver si está cerca.
+     * 4. Al final pinta solo las tarjetas que han pasado todas las pruebas.
+     */
     private void aplicarFiltros() {
+        // Primero borramos todo lo que hay en el contenedor para empezar de cero
         contenedorComunidad.getChildren().clear();
+        
+        // Si no hay actividades cargadas, no hacemos nada y salimos
         if (todasActividadesComunidad == null || todasActividadesComunidad.isEmpty()) return;
 
         // FILTRO 1: Búsqueda por texto
+        // Cogemos lo que ha escrito el usuario, quitamos espacios y lo pasamos a minúsculas
         String query = searchBar.getText();
         if (query == null) query = "";
         String q = query.toLowerCase().trim();
 
+        // Usamos un stream para filtrar la lista
         List<ActividadDTO> actividadesFiltradas = todasActividadesComunidad.stream()
                 .filter(act -> {
+                    // Si no ha escrito nada, esta actividad vale
                     if (q.isEmpty()) return true;
+                    
+                    // Comprobamos si el texto buscado está en el título, descripción o ciudad
                     return act.getTitulo().toLowerCase().contains(q)
                             || act.getDescripcion().toLowerCase().contains(q)
                             || (act.getCiudad() != null && act.getCiudad().toLowerCase().contains(q))
-                            || (act.getUbicacion() != null && act.getUbicacion().toLowerCase().contains(q));
+                            || (act.getUbicacion() != null && act.getUbicacion().toLowerCase().contains(q))
+                            || (act.getTipo() != null && act.getTipo().toString().toLowerCase().contains(q))    ;
                 })
                 .collect(Collectors.toList());
 
-        // FILTRO 2: Distancia (solo si hay sesión y no es "Todas las distancias")
+        // FILTRO 2: Distancia (esto solo funciona si el usuario ha iniciado sesión)
         String filtroDistancia = cmbDistancia.getValue();
         if (Sesion.getUsuarioActual() != null
                 && filtroDistancia != null
                 && !filtroDistancia.equals("Todas las distancias")) {
 
+            // Cogemos las coordenadas del usuario actual
             double latUsuario = Sesion.getUsuarioActual().getLatitud();
             double lonUsuario = Sesion.getUsuarioActual().getLongitud();
+            
+            // Vemos cuántos km máximo quiere buscar
             double distanciaMaxima = extraerDistanciaMaxima(filtroDistancia);
 
+            // Volvemos a filtrar la lista que ya teníamos filtrada por texto
             actividadesFiltradas = actividadesFiltradas.stream()
                     .filter(act -> {
-                        // SI NO TIENE COORDENADAS, MOSTRARLA (actividades predeterminadas)
+                        // Si la actividad no tiene coordenadas (como las predeterminadas), la mostramos igual
                         if (act.getLatitud() == null || act.getLongitud() == null) {
                             return true;
                         }
@@ -187,21 +226,29 @@ public class InicioController {
                         double latActividad = act.getLatitud().doubleValue();
                         double lonActividad = act.getLongitud().doubleValue();
 
+                        // Calculamos la distancia real usando la fórmula
                         double distancia = DistanciaUtil.calcularDistancia(
                                 latUsuario, lonUsuario, latActividad, lonActividad
                         );
+                        
+                        // Si está dentro del radio, nos la quedamos
                         return distancia <= distanciaMaxima;
                     })
                     .collect(Collectors.toList());
         }
 
-        // Mostrar actividades filtradas
+        // Por último, recorremos la lista final y creamos una tarjeta para cada actividad
         for (ActividadDTO act : actividadesFiltradas) {
             contenedorComunidad.getChildren().add(crearCardActividad(act));
         }
     }
 
-
+    /**
+     * Convierte la selección del filtro de distancia en un valor numérico.
+     *
+     * @param filtro Texto seleccionado en el ComboBox.
+     * @return Distancia máxima en kilómetros.
+     */
     private double extraerDistanciaMaxima(String filtro) {
         switch (filtro) {
             case "Menos de 5 km": return 5.0;
@@ -212,6 +259,9 @@ public class InicioController {
         }
     }
 
+    /**
+     * Carga y muestra las actividades creadas por el usuario actual en el panel derecho.
+     */
     private void cargarActividadesUsuario() {
         contenedorUsuario.getChildren().clear();
         if (Sesion.getUsuarioActual() == null) return;
@@ -223,6 +273,9 @@ public class InicioController {
         }
     }
 
+    /**
+     * Carga y muestra las actividades denunciadas en el panel derecho (solo para administradores).
+     */
     private void cargarActividadesDenunciadas() {
         contenedorUsuario.getChildren().clear();
         List<ActividadDTO> denunciadas = actividadDAO.obtenerDenunciadasOrdenadas();
@@ -239,6 +292,9 @@ public class InicioController {
         }
     }
 
+    /**
+     * Configura el contenido del panel derecho basándose en el rol del usuario (Admin o Usuario normal).
+     */
     private void cargarPanelDerechoSegunRol() {
         if (!Sesion.haySesion()) {
             contenedorUsuario.getChildren().clear();
@@ -248,6 +304,12 @@ public class InicioController {
         else cargarActividadesUsuario();
     }
 
+    /**
+     * Crea un componente visual (tarjeta) para representar una actividad.
+     *
+     * @param act DTO de la actividad.
+     * @return Panel (Pane) que contiene la información visual de la actividad.
+     */
     private Pane crearCardActividad(ActividadDTO act) {
         VBox vbox = new VBox(12);
         vbox.setStyle(
@@ -439,6 +501,11 @@ public class InicioController {
         return vbox;
     }
 
+    /**
+     * Abre la vista de edición para una actividad específica.
+     *
+     * @param actividad La actividad a editar.
+     */
     private void onEditarActividad(ActividadDTO actividad) {
         try {
             var loader = ViewUtil.loaderFXML(getClass(), "/vistas/crearActividad.fxml");
@@ -462,6 +529,12 @@ public class InicioController {
         }
     }
 
+    /**
+     * Maneja la eliminación de una actividad por parte del usuario creador.
+     * Solicita confirmación antes de eliminar.
+     *
+     * @param act La actividad a eliminar.
+     */
     private void onEliminarActividadUsuario(ActividadDTO act) {
         boolean confirmar = AlertUtil.confirm(
                 "Eliminar actividad",
@@ -485,6 +558,11 @@ public class InicioController {
         }
     }
 
+    /**
+     * Abre la vista de detalle de una actividad.
+     *
+     * @param actividad La actividad a visualizar.
+     */
     private void abrirDetalleActividad(ActividadDTO actividad) {
         try {
             var loader = ViewUtil.loaderFXML(getClass(), "/vistas/Actividad.fxml");
@@ -506,22 +584,57 @@ public class InicioController {
         }
     }
 
+    /**
+     * Capitaliza la primera letra de una cadena.
+     *
+     * @param str Cadena de entrada.
+     * @return Cadena con la primera letra en mayúscula.
+     */
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
+    /**
+     * Obtiene el color de fondo asociado a un tipo de actividad.
+     *
+     * @param tipo Tipo de actividad (String).
+     * @return Código de color hexadecimal.
+     */
     private String getTipoColor(String tipo) {
         return tipo.equals("DEPORTIVA") ? "#dbeafe"
                 : tipo.equals("CULTURAL") ? "#e9d5ff"
                 : "#bbf7d0";
     }
 
+    /**
+     * Maneja el evento de clic en el botón de registro.
+     * Redirige a la vista de registro.
+     */
     @FXML private void handleRegister() { irAVista("Registro.fxml"); }
+
+    /**
+     * Maneja el evento de clic en el botón de inicio de sesión.
+     * Redirige a la vista de login.
+     */
     @FXML private void handleLogin() { irAVista("Login.fxml"); }
+
+    /**
+     * Maneja el evento de clic en el botón de crear actividad.
+     * Redirige a la vista de creación de actividad.
+     */
     @FXML private void handleCrearActividad() { irAVista("crearActividad.fxml"); }
+
+    /**
+     * Maneja el evento de clic en el botón de perfil.
+     * Redirige a la vista de perfil de usuario.
+     */
     @FXML private void handlePerfil() { irAVista("Perfil.fxml"); }
 
+    /**
+     * Maneja el evento de cierre de sesión.
+     * Limpia la sesión actual y actualiza la interfaz.
+     */
     @FXML
     private void handleLogout() {
         Sesion.cerrarSesion();
@@ -531,6 +644,11 @@ public class InicioController {
         contenedorUsuario.getChildren().clear();
     }
 
+    /**
+     * Navega a una vista FXML específica.
+     *
+     * @param fxml Nombre del archivo FXML (sin ruta, solo nombre).
+     */
     private void irAVista(String fxml) {
         try {
             Stage stage = (Stage) logoImage.getScene().getWindow();
@@ -547,6 +665,11 @@ public class InicioController {
         }
     }
 
+    /**
+     * Actualiza la visibilidad de los elementos de la interfaz según el estado de la sesión.
+     *
+     * @param loggedIn true si el usuario ha iniciado sesión, false en caso contrario.
+     */
     public void updateUIForSession(boolean loggedIn) {
         btnRegister.setVisible(!loggedIn);
         btnLogin.setVisible(!loggedIn);
@@ -581,6 +704,10 @@ public class InicioController {
         cargarPanelDerechoSegunRol();
     }
 
+    /**
+     * Callback ejecutado cuando un usuario inicia sesión exitosamente.
+     * Refresca toda la interfaz y carga los datos correspondientes.
+     */
     public void onUsuarioLogueado() {
         updateUIForSession(true);
         configurarUIRol();
@@ -588,23 +715,31 @@ public class InicioController {
         cargarPanelDerechoSegunRol();
     }
 
+    /**
+     * Configura elementos específicos de la interfaz según el rol del usuario (Admin vs Usuario).
+     * Oculta o muestra controles exclusivos de administración.
+     */
     private void configurarUIRol() {
+        //verifica que el usuario sea administrador mediante la clase sesion
         boolean esAdmin = Sesion.esAdmin();
 
+        //muestra el icono de administrador
         if (lblAdminBadge != null) {
             lblAdminBadge.setVisible(esAdmin);
             lblAdminBadge.setManaged(esAdmin);
         }
-
+        //cambia el titulo del panel derecho de mis actividades creadas a actividades denunciadas si es admin
         if (lblTituloPanelDerecho != null) {
             lblTituloPanelDerecho.setText(esAdmin ? "Actividades denunciadas" : "Mis Actividades Creadas");
         }
 
+        //muestra el boton de crear actividades
         if (btnCrearActividad != null) {
             boolean mostrar = Sesion.haySesion() && !esAdmin;
             btnCrearActividad.setVisible(mostrar);
             btnCrearActividad.setManaged(mostrar);
         }
+
 
         if (cmbDistancia != null) {
             cmbDistancia.setVisible(!esAdmin);
@@ -627,6 +762,11 @@ public class InicioController {
         }
     }
 
+    /**
+     * Maneja la eliminación de una actividad por parte de un administrador.
+     *
+     * @param act La actividad a eliminar.
+     */
     private void onEliminarActividad(ActividadDTO act) {
         if (!Sesion.esAdmin()) return;
 
@@ -634,8 +774,9 @@ public class InicioController {
                 "Eliminar actividad",
                 "Esta acción no se puede deshacer.\n\nLa actividad \"" + act.getTitulo() + "\" será eliminada."
         );
-
+        //si se cancela la alerta aborta el proceso
         if (!confirmar) return;
+
 
         try {
             actividadDAO.eliminarPorId(act.getId());
@@ -647,6 +788,9 @@ public class InicioController {
         }
     }
 
+    /**
+     * Muestra una ventana modal con el aviso legal y términos de uso.
+     */
     @FXML
     private void mostrarLegal() {
         Stage modalStage = new Stage();
@@ -723,6 +867,11 @@ public class InicioController {
         modalStage.showAndWait();
     }
 
+    /**
+     * Muestra una alerta de error con el mensaje especificado.
+     *
+     * @param mensaje Mensaje de error a mostrar.
+     */
     private void mostrarError(String mensaje) {
         AlertUtil.error("Error", mensaje);
     }

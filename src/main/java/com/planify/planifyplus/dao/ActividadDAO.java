@@ -138,8 +138,37 @@ public class ActividadDAO {
 
         try {
             tx.begin();
-            em.createQuery("DELETE FROM ActividadDTO a WHERE a.predeterminada = true").executeUpdate();
+
+            List<Long> idsPredeterminadas = em.createQuery(
+                    "SELECT a.id FROM ActividadDTO a WHERE a.predeterminada = true",
+                    Long.class
+            ).getResultList();
+
+            // Si no hay actividades predeterminadas, no hacer nada
+            if (idsPredeterminadas.isEmpty()) {
+                tx.commit();
+                return;
+            }
+
+            // 1. Eliminar inscripciones usando los IDs
+            em.createQuery(
+                    "DELETE FROM InscripcionDTO i WHERE i.actividad.id IN :ids"
+            ).setParameter("ids", idsPredeterminadas).executeUpdate();
+
+            // 2. Eliminar denuncias usando los IDs
+            em.createQuery(
+                    "DELETE FROM DenunciaActividadDTO d WHERE d.actividad.id IN :ids"
+            ).setParameter("ids", idsPredeterminadas).executeUpdate();
+
+            // 3. Eliminar las actividades
+            em.createQuery(
+                    "DELETE FROM ActividadDTO a WHERE a.id IN :ids"
+            ).setParameter("ids", idsPredeterminadas).executeUpdate();
+
             tx.commit();
+
+            System.out.println("✅ Eliminadas " + idsPredeterminadas.size() + " actividades predeterminadas");
+
         } catch (Exception e) {
             if (tx.isActive()) tx.rollback();
             e.printStackTrace();
@@ -147,6 +176,8 @@ public class ActividadDAO {
             em.close();
         }
     }
+
+
 
 
     public void eliminarPorId(Long id) {
