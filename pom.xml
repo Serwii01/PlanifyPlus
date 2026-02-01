@@ -12,9 +12,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Versions -->
         <junit.version>5.12.1</junit.version>
+        <mockito.version>5.11.0</mockito.version>
+        <mockito.inline.version>5.2.0</mockito.inline.version>
+
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+
         <lombok.version>1.18.42</lombok.version>
         <hibernate.version>6.2.6.Final</hibernate.version>
         <mysql.connector.version>8.1.0</mysql.connector.version>
@@ -38,12 +44,12 @@
             <artifactId>javafx-web</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+
         <!-- BootstrapFX -->
         <dependency>
             <groupId>org.kordamp.bootstrapfx</groupId>
@@ -51,7 +57,7 @@
             <version>0.4.0</version>
         </dependency>
 
-        <!-- JUnit -->
+        <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -62,6 +68,22 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito inline (para mockear métodos estáticos) -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>${mockito.inline.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -100,9 +122,6 @@
             <artifactId>jxmapviewer2</artifactId>
             <version>2.8</version>
         </dependency>
-
-
-
     </dependencies>
 
     <build>
@@ -123,6 +142,17 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <!-- Surefire (para ejecutar tests JUnit 5 con mvn test) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!-- Evita líos con module-path en proyectos JavaFX sin module-info -->
+                    <useModulePath>false</useModulePath>
                 </configuration>
             </plugin>
 
