@@ -206,7 +206,7 @@ public class CrearActividadController {
      * Valida el formulario y guarda la actividad (creación o actualización).
      */
     @FXML
-    private void handleGuardarActividad() {
+    public void handleGuardarActividad() {
         if (txtTitulo.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "El título es obligatorio."); return; }
         if (txtDescripcion.getText().trim().isEmpty()) { AlertUtil.error("Campo obligatorio", "La descripción es obligatoria."); return; }
         if (dpFecha.getValue() == null) { AlertUtil.error("Campo obligatorio", "La fecha es obligatoria."); return; }

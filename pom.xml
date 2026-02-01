@@ -11,13 +11,14 @@
     <name>PlanifyPlus</name>
 
     <properties>
+        <!-- EJECUTA EN TERMINAL: uname -m -->
+        <!-- Si sale arm64: Apple Silicon (deja mac-aarch64) -->
+        <!-- Si sale x86_64: Intel (cambia a mac) -->
+        <javafx.platform>mac-aarch64</javafx.platform>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Versions -->
-        <junit.version>5.12.1</junit.version>
-        <mockito.version>5.11.0</mockito.version>
-        <mockito.inline.version>5.2.0</mockito.inline.version>
-
+        <!-- 🆕 AÑADIDO: Solo esta propiedad nueva -->
+        <junit.version>5.10.3</junit.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
 
@@ -57,17 +58,27 @@
             <version>0.4.0</version>
         </dependency>
 
+        <!-- 🆕 AÑADIDAS: SOLO estas 4 dependencias de test -->
         <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.version}</version>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Mockito -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -126,7 +137,6 @@
 
     <build>
         <plugins>
-
             <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -145,28 +155,29 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire (para ejecutar tests JUnit 5 con mvn test) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-                <configuration>
-                    <!-- Evita líos con module-path en proyectos JavaFX sin module-info -->
-                    <useModulePath>false</useModulePath>
-                </configuration>
-            </plugin>
-
-            <!-- JavaFX Plugin -->
+            <!-- JavaFX Plugin - VERSIÓN CORRECTA -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.planify.planifyplus/com.planify.planifyplus.HelloApplication</mainClass>
+                    <mainClass>com.planify.planifyplus.PlanifyApp</mainClass>
+                    <options>
+                        <option>--add-opens=java.base/java.lang=ALL-UNNAMED</option>
+                        <option>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</option>
+                        <option>--add-opens=java.base/java.io=ALL-UNNAMED</option>
+                        <option>--add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                        <option>-Dfile.encoding=UTF-8</option>
+                    </options>
                 </configuration>
             </plugin>
 
+            <!-- 🆕 AÑADIDO: SOLO este plugin para ejecutar tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
         </plugins>
     </build>
-
 </project>

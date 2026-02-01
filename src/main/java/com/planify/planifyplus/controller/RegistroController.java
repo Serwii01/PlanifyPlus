@@ -47,7 +47,7 @@ public class RegistroController {
      * Vuelve a la pantalla de inicio.
      */
     @FXML
-    private void onIrInicio() {
+    public void onIrInicio() {
         go("/vistas/Inicio.fxml");
     }
 
@@ -55,7 +55,7 @@ public class RegistroController {
      * Abre la pantalla de login.
      */
     @FXML
-    private void onIrLogin() {
+    public void onIrLogin() {
         go("/vistas/Login.fxml");
     }
 
@@ -63,7 +63,7 @@ public class RegistroController {
      * Valida el formulario y crea el usuario.
      */
     @FXML
-    private void onRegistrarse() {
+    public void onRegistrarse() {
         String nombre  = txtNombre.getText().trim();
         String email   = txtEmail.getText().trim();
         String pass    = txtContrasena.getText();

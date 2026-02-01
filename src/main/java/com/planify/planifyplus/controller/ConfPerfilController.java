@@ -36,7 +36,7 @@ public class ConfPerfilController {
      * Inicializa la vista con los datos del usuario en sesión.
      */
     @FXML
-    private void initialize() {
+    public void initialize() {
         cmbCiudad.getItems().setAll(
                 "Madrid",
                 "Barcelona",
@@ -63,7 +63,7 @@ public class ConfPerfilController {
      * @param event evento del botón
      */
     @FXML
-    private void onGuardarCambios(ActionEvent event) {
+    public void onGuardarCambios(ActionEvent event) {
         UsuarioDTO usuario = Sesion.getUsuarioActual();
         if (usuario == null) {
             AlertUtil.error("Error", "No hay ningún usuario en sesión.");
@@ -134,7 +134,7 @@ public class ConfPerfilController {
      * @param event evento del botón
      */
     @FXML
-    private void onCancelar(ActionEvent event) {
+    public void onCancelar(ActionEvent event) {
         irAPerfil(event);
     }
 
@@ -144,7 +144,7 @@ public class ConfPerfilController {
      * @param event evento del botón
      */
     @FXML
-    private void onIrInicio(ActionEvent event) {
+    public void onIrInicio(ActionEvent event) {
         cambiarEscena("/vistas/Inicio.fxml", event);
     }
 
