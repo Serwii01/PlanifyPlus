@@ -348,7 +348,7 @@ public class PerfilController {
      * Muestra el mes anterior en el calendario.
      */
     @FXML
-    private void onMesAnterior() {
+    public void onMesAnterior() {
         mesActual = mesActual.minusMonths(1);
         cargarCalendario(mesActual);
     }
@@ -357,19 +357,19 @@ public class PerfilController {
      * Muestra el mes siguiente en el calendario.
      */
     @FXML
-    private void onMesSiguiente() {
+    public void onMesSiguiente() {
         mesActual = mesActual.plusMonths(1);
         cargarCalendario(mesActual);
     }
 
     @FXML
-    private void onIrInicio() { cambiarEscena("/vistas/Inicio.fxml"); }
+    public void onIrInicio() { cambiarEscena("/vistas/Inicio.fxml"); }
 
     @FXML
     private void onIrConfPerfil() { cambiarEscena("/vistas/ConfPerfil.fxml"); }
 
     @FXML
-    private void onExplorarActividades() { cambiarEscena("/vistas/Inicio.fxml"); }
+    public void onExplorarActividades() { cambiarEscena("/vistas/Inicio.fxml"); }
 
     /**
      * Cambia la escena a la vista indicada.

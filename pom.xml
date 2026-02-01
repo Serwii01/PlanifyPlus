@@ -11,8 +11,14 @@
     <name>PlanifyPlus</name>
 
     <properties>
+        <!-- EJECUTA EN TERMINAL: uname -m -->
+        <!-- Si sale arm64: Apple Silicon (deja mac-aarch64) -->
+        <!-- Si sale x86_64: Intel (cambia a mac) -->
+        <javafx.platform>mac-aarch64</javafx.platform>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>5.12.1</junit.version>
+        <!-- 🆕 AÑADIDO: Solo esta propiedad nueva -->
+        <junit.version>5.10.3</junit.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.42</lombok.version>
@@ -38,12 +44,12 @@
             <artifactId>javafx-web</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+
         <!-- BootstrapFX -->
         <dependency>
             <groupId>org.kordamp.bootstrapfx</groupId>
@@ -51,17 +57,27 @@
             <version>0.4.0</version>
         </dependency>
 
-        <!-- JUnit -->
+        <!-- 🆕 AÑADIDAS: SOLO estas 4 dependencias de test -->
+        <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.version}</version>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Mockito -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -100,14 +116,10 @@
             <artifactId>jxmapviewer2</artifactId>
             <version>2.8</version>
         </dependency>
-
-
-
     </dependencies>
 
     <build>
         <plugins>
-
             <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -126,17 +138,29 @@
                 </configuration>
             </plugin>
 
-            <!-- JavaFX Plugin -->
+            <!-- JavaFX Plugin - VERSIÓN CORRECTA -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.planify.planifyplus/com.planify.planifyplus.HelloApplication</mainClass>
+                    <mainClass>com.planify.planifyplus.PlanifyApp</mainClass>
+                    <options>
+                        <option>--add-opens=java.base/java.lang=ALL-UNNAMED</option>
+                        <option>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</option>
+                        <option>--add-opens=java.base/java.io=ALL-UNNAMED</option>
+                        <option>--add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                        <option>-Dfile.encoding=UTF-8</option>
+                    </options>
                 </configuration>
             </plugin>
 
+            <!-- 🆕 AÑADIDO: SOLO este plugin para ejecutar tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
         </plugins>
     </build>
-
 </project>

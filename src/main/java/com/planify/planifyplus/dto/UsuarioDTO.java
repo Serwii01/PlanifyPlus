@@ -47,6 +47,11 @@ public class UsuarioDTO {
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
+
+    public void setEsAdmin(boolean esAdmin) {
+        this.esAdmin = esAdmin;
+    }
+
     /**
      * Denuncias realizadas por el usuario.
      */
