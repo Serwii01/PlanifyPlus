@@ -1,5 +1,13 @@
 # 🌟 PlanifyPlus
 
+![Java](https://img.shields.io/badge/Java-21-orange)
+![JavaFX](https://img.shields.io/badge/JavaFX-UI-blue)
+![Maven](https://img.shields.io/badge/Maven-Build-red)
+![MySQL](https://img.shields.io/badge/MySQL-Database-blue)
+![Hibernate](https://img.shields.io/badge/Hibernate-JPA-green)
+![Status](https://img.shields.io/badge/Status-Active-success)
+![License](https://img.shields.io/badge/License-Academic-lightgrey)
+
 **PlanifyPlus** es una aplicación de escritorio desarrollada en **Java (JavaFX + Maven)** orientada a la gestión de actividades dentro de una comunidad.  
 Permite a los usuarios crear, descubrir e inscribirse en eventos de forma sencilla, incorporando funcionalidades de geolocalización y gestión avanzada mediante roles.
 
